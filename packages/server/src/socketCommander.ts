@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { Commander, Logger } from './model'
 import { Server as HttpServer} from 'http'
-import { Player } from '../../common/model';
+import { GameConfig, Player } from '../../common/model';
 
 export class SocketCommander implements Commander {
   private readonly io: Server
@@ -50,8 +50,8 @@ export class SocketCommander implements Commander {
     this.io.emit('start')
   }
 
-  sendPlayerJoined(player: Player) {
+  sendPlayerJoined(player: Player, config: GameConfig) {
     const { sockets } = this.io.sockets
-    sockets.get(player.id)?.emit('playerJoined', player)
+    sockets.get(player.id)?.emit('playerJoined', { player, config })
   }
 }

@@ -27,7 +27,7 @@ export class Game {
   constructor(logger: Logger, commander: Commander) {
     this.config = {
       columns: 7,
-      rows: 30
+      rows: 10
     }
     this.players = {}
     this.bullets = []
@@ -46,7 +46,7 @@ export class Game {
     this.players[id] = { id, name }
     this.logger.log(`Player ${name} (id: ${id}) joined`)
 
-    this.commander.sendPlayerJoined(this.players[id])
+    this.commander.sendPlayerJoined(this.players[id], this.config)
 
     if(Object.values(this.players).length === TARGET_PLAYERS_NUMBER) {
       this.start()

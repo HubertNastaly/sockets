@@ -1,4 +1,4 @@
-import { Player, PlayerId } from "../../common/model";
+import { GameConfig, Player, PlayerId } from "../../common/model";
 
 export interface Logger {
   log: (...values: any[]) => void
@@ -8,5 +8,5 @@ export interface Logger {
 export interface Commander {
   setOnJoinCallback(callback: (id: PlayerId, name: string) => void): void;
   start(): void;
-  sendPlayerJoined(player: Player): void;
+  sendPlayerJoined(player: Player, config: GameConfig): void;
 }
