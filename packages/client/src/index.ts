@@ -1,5 +1,6 @@
 import * as io from 'socket.io-client'
 import { createServer, Server as HttpServer } from 'http'
+import { Player } from '../../common/model'
 
 const PORT = Number(process.env.PORT || 3001)
 const HOST = 'localhost'
@@ -22,7 +23,9 @@ class Client {
     
       socket.on('connect', () => {
         console.log('Client socket connection established')
+        this.registerConfirmJoin(socket)
         this.registerStart(socket)
+
         this.joinGame(socket)
       })
     
@@ -39,6 +42,12 @@ class Client {
   private registerStart(socket: io.Socket) {
     socket.on('start', () => {
       console.log('Game started')
+    })
+  }
+
+  private registerConfirmJoin(socket: io.Socket) {
+    socket.on('playerJoined', (player: Player) => {
+      console.log('Player joined: ', { player })
     })
   }
 }

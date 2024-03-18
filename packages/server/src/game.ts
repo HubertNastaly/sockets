@@ -1,5 +1,5 @@
-import { GameConfig } from "../../common/model"
-import { Commander, Logger, Player, PlayerId } from "./model"
+import { GameConfig, Player, PlayerId } from "../../common/model"
+import { Commander, Logger } from "./model"
 
 interface Bullet {
   x: number
@@ -45,6 +45,8 @@ export class Game {
     }
     this.players[id] = { id, name }
     this.logger.log(`Player ${name} (id: ${id}) joined`)
+
+    this.commander.sendPlayerJoined(this.players[id])
 
     if(Object.values(this.players).length === TARGET_PLAYERS_NUMBER) {
       this.start()

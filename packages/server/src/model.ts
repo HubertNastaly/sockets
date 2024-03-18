@@ -1,9 +1,4 @@
-export type PlayerId = string
-
-export interface Player {
-  id: PlayerId
-  name: string
-}
+import { Player, PlayerId } from "../../common/model";
 
 export interface Logger {
   log: (...values: any[]) => void
@@ -13,4 +8,5 @@ export interface Logger {
 export interface Commander {
   setOnJoinCallback(callback: (id: PlayerId, name: string) => void): void;
   start(): void;
+  sendPlayerJoined(player: Player): void;
 }

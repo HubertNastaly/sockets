@@ -1,6 +1,7 @@
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { Commander, Logger } from './model'
 import { Server as HttpServer} from 'http'
+import { Player } from '../../common/model';
 
 export class SocketCommander implements Commander {
   private readonly io: Server
@@ -23,9 +24,7 @@ export class SocketCommander implements Commander {
     this.io.on('connection', (socket) => {
       this.logger.log(`Socket connection established for socket: ${socket.id}`)
 
-      socket.on('join', (data: { name: string }) => {
-        this.gameCallbacks.onJoin(socket.id, data.name)
-      })
+      this.registerOnJoin(socket)
     })
 
     this.io.on('connect_error', (error) => {
@@ -33,6 +32,12 @@ export class SocketCommander implements Commander {
     })
 
     this.io.listen(httpServer)
+  }
+
+  private registerOnJoin(socket: Socket) {
+    socket.on('join', (data: { name: string }) => {
+      this.gameCallbacks.onJoin(socket.id, data.name)
+    })
   }
 
   // methods used externally by Game
@@ -43,5 +48,10 @@ export class SocketCommander implements Commander {
 
   start() {
     this.io.emit('start')
+  }
+
+  sendPlayerJoined(player: Player) {
+    const { sockets } = this.io.sockets
+    sockets.get(player.id)?.emit('playerJoined', player)
   }
 }
