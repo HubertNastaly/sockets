@@ -71,8 +71,8 @@ export class Game {
     }
 
     const inversedBullets = this.bullets.map(({ x, y, direction }): Bullet => ({
-      x: this.config.columns - x,
-      y: this.config.rows - y,
+      x: this.config.columns - 1 - x,
+      y: this.config.rows - 1 - y,
       direction: direction === 1 ? -1 : 1
     }))
 
