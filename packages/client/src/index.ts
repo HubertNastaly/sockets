@@ -18,7 +18,7 @@ class Client {
   public run() {
     const socket: ClientSocket = connect(SERVER_URL)
   
-    socket.on(SocketEvent.Connect, () => {
+    socket.on('connect', () => {
       console.log('Client socket connection established')
       this.registerPlayerJoined(socket)
       this.registerStart(socket)
@@ -27,7 +27,7 @@ class Client {
       this.joinGame(socket)
     })
   
-    socket.on(SocketEvent.ConnectError, (error) => {
+    socket.on('connect_error', (error) => {
       console.log({ error })
     })
   }

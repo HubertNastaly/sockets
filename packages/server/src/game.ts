@@ -43,12 +43,13 @@ export class Game {
     if(this.players[id]) {
       throw new Error(`Player with id ${id} already exists`)
     }
-    this.players[id] = { id, name }
+    const playerCount = Object.keys(this.players).length
+    this.players[id] = { id, name, isFirst: playerCount === 0 }
     this.logger.log(`Player ${name} (id: ${id}) joined`)
 
     this.commander.sendPlayerJoined(this.players[id], this.config)
     
-    if(Object.values(this.players).length === TARGET_PLAYERS_NUMBER) {
+    if(playerCount + 1 === TARGET_PLAYERS_NUMBER) {
       this.start()
     }
   }
@@ -68,7 +69,16 @@ export class Game {
         this.end()
       }
     }
-    this.commander.sendUpdateBoard(this.bullets)
+
+    const inversedBullets = this.bullets.map(({ x, y, direction }): Bullet => ({
+      x: this.config.columns - x,
+      y: this.config.rows - y,
+      direction: direction === 1 ? -1 : 1
+    }))
+
+    Object.values(this.players).forEach(({ id, isFirst }) => {
+      this.commander.sendUpdateBoard(id, isFirst ? this.bullets : inversedBullets)
+    })
   }
 
   private end() {

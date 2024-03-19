@@ -1,9 +1,6 @@
 import { Bullet, GameConfig, Player } from "./model"
 
 export enum SocketEvent {
-  Connect = 'connect',
-  ConnectError = 'connect_error',
-  Disconnect = 'disconnect',
   Join = 'join',
   Start = 'start',
   PlayerJoined = 'playerJoined',

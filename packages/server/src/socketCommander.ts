@@ -1,11 +1,11 @@
 import { Server, Socket } from 'socket.io';
-import { Commander, Logger } from './model'
+import { Commander, Logger, ServerSocket } from './model'
 import { Server as HttpServer} from 'http'
-import { Bullet, GameConfig, Player } from '../../common/model';
-import { SocketEvent } from '../../common/events';
+import { Bullet, GameConfig, Player, PlayerId } from '../../common/model';
+import { ClientEmittedEventsMap, ServerEmittedEventsMap, SocketEvent } from '../../common/events';
 
 export class SocketCommander implements Commander {
-  private readonly io: Server
+  private readonly io: ServerSocket
   private readonly logger: Logger
   private gameCallbacks: {
     onJoin: (id: string, name: string) => void
@@ -13,7 +13,7 @@ export class SocketCommander implements Commander {
 
   constructor(logger: Logger) {
     this.logger = logger
-    this.io = new Server()
+    this.io = new Server<ClientEmittedEventsMap, ServerEmittedEventsMap>()
     this.gameCallbacks = {
       onJoin: () => {
         throw new Error('Not implemented: onJoin')
@@ -56,7 +56,8 @@ export class SocketCommander implements Commander {
     sockets.get(player.id)?.emit(SocketEvent.PlayerJoined, { player, config })
   }
 
-  sendUpdateBoard(bullets: Bullet[]) {
-    this.io.emit(SocketEvent.UpdateBoard, bullets)
+  sendUpdateBoard(playerId: PlayerId, bullets: Bullet[]) {
+    const { sockets } = this.io.sockets
+    sockets.get(playerId)?.emit(SocketEvent.UpdateBoard, bullets)
   }
 }
