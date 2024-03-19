@@ -10,7 +10,8 @@ export interface Player {
   name: string
 }
 
-export interface PlayerJoinedPayload {
-  player: Player
-  config: GameConfig
+export interface Bullet {
+  x: number
+  y: number
+  direction: 1 | -1 // down | up
 }

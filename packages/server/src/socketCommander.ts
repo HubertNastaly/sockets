@@ -1,7 +1,8 @@
 import { Server, Socket } from 'socket.io';
 import { Commander, Logger } from './model'
 import { Server as HttpServer} from 'http'
-import { GameConfig, Player } from '../../common/model';
+import { Bullet, GameConfig, Player } from '../../common/model';
+import { SocketEvent } from '../../common/events';
 
 export class SocketCommander implements Commander {
   private readonly io: Server
@@ -35,7 +36,7 @@ export class SocketCommander implements Commander {
   }
 
   private registerOnJoin(socket: Socket) {
-    socket.on('join', (data: { name: string }) => {
+    socket.on(SocketEvent.Join, (data: { name: string }) => {
       this.gameCallbacks.onJoin(socket.id, data.name)
     })
   }
@@ -47,11 +48,15 @@ export class SocketCommander implements Commander {
   }
 
   start() {
-    this.io.emit('start')
+    this.io.emit(SocketEvent.Start)
   }
 
   sendPlayerJoined(player: Player, config: GameConfig) {
     const { sockets } = this.io.sockets
-    sockets.get(player.id)?.emit('playerJoined', { player, config })
+    sockets.get(player.id)?.emit(SocketEvent.PlayerJoined, { player, config })
+  }
+
+  sendUpdateBoard(bullets: Bullet[]) {
+    this.io.emit(SocketEvent.UpdateBoard, bullets)
   }
 }

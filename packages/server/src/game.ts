@@ -1,11 +1,5 @@
-import { GameConfig, Player, PlayerId } from "../../common/model"
+import { Bullet, GameConfig, Player, PlayerId } from "../../common/model"
 import { Commander, Logger } from "./model"
-
-interface Bullet {
-  x: number
-  y: number
-  direction: 'up' | 'down'
-}
 
 enum GameState {
   Waiting,
@@ -14,6 +8,7 @@ enum GameState {
 }
 
 const TARGET_PLAYERS_NUMBER = 2
+const FRAME_INTERVAL = 100 //ms
 
 export class Game {
   private readonly config: GameConfig
@@ -24,6 +19,8 @@ export class Game {
   private players: Record<PlayerId, Player>
   private bullets: Bullet[]
 
+  private gameLoop: NodeJS.Timeout | null
+
   constructor(logger: Logger, commander: Commander) {
     this.config = {
       columns: 7,
@@ -33,9 +30,12 @@ export class Game {
     this.bullets = []
     this.logger = logger
     this.commander = commander
+    this.gameLoop = null
   }
 
   public initialize() {
+    // hardcode bullet
+    this.bullets.push({ x: 2, y: 0, direction: 1 })
     this.commander.setOnJoinCallback(this.addPlayer.bind(this))
   }
 
@@ -47,7 +47,7 @@ export class Game {
     this.logger.log(`Player ${name} (id: ${id}) joined`)
 
     this.commander.sendPlayerJoined(this.players[id], this.config)
-
+    
     if(Object.values(this.players).length === TARGET_PLAYERS_NUMBER) {
       this.start()
     }
@@ -57,9 +57,22 @@ export class Game {
     this.gameState = GameState.Started
     this.logger.log('Game started')
     this.commander.start()
+
+    this.gameLoop = setInterval(this.updateBoard.bind(this), FRAME_INTERVAL)
+  }
+
+  private updateBoard() {
+    for(const bullet of this.bullets) {
+      bullet.y += bullet.direction
+      if(bullet.y < 0 || bullet.y >= this.config.rows) {
+        this.end()
+      }
+    }
+    this.commander.sendUpdateBoard(this.bullets)
   }
 
   private end() {
+    clearInterval(this.gameLoop!)
     this.gameState = GameState.Ended
   }
 }
