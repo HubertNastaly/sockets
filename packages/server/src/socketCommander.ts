@@ -7,6 +7,8 @@ import { ClientEmittedEventsMap, ServerEmittedEventsMap, SocketEvent } from '../
 export class SocketCommander implements Commander {
   private readonly io: SocketServer
   private readonly logger: Logger
+  private persistentSocketIdToPlayerId: Record<string, PlayerId>
+  private persistentSocketIdToSocket: Record<string, Socket>
   private gameCallbacks: {
     onJoin: (id: string, name: string) => void
     onFire: (playerId: PlayerId) => void
@@ -16,6 +18,8 @@ export class SocketCommander implements Commander {
   constructor(logger: Logger) {
     this.logger = logger
     this.io = new io.Server<ClientEmittedEventsMap, ServerEmittedEventsMap>()
+    this.persistentSocketIdToPlayerId = {}
+    this.persistentSocketIdToSocket = {}
     this.gameCallbacks = {
       onJoin: this.notImplemented('onJoin'),
       onFire: this.notImplemented('onFire'),
@@ -27,7 +31,23 @@ export class SocketCommander implements Commander {
     this.io.on('connection', (socket) => {
       this.logger.log(`Socket connection established for socket: ${socket.id}`)
 
-      this.registerOnJoin(socket)
+      if(!socket.recovered) {
+        this.registerOnJoin(socket)
+
+        const persistentSocketId = socket.id
+        const playerId = socket.id
+        this.persistentSocketIdToPlayerId[persistentSocketId] = playerId
+        this.persistentSocketIdToSocket[persistentSocketId] = socket
+
+        socket.emit(SocketEvent.ConnectionEstablished, persistentSocketId)
+      } else {
+        const { persistentSocketId } = socket.handshake.auth
+        if(!persistentSocketId) {
+          throw new Error('Missing persistent socket id')
+        }
+        this.persistentSocketIdToSocket[persistentSocketId] = socket
+      }
+
       this.registerOnFire(socket)
       this.registerOnMove(socket)
     })

@@ -17,16 +17,18 @@ class Client {
   }
 
   public run() {
-    const socket: ClientSocket = connect(SERVER_URL)
-  
+    const socket: ClientSocket = connect(SERVER_URL, {
+      transports: ['websocket', 'polling']
+    })
+
+    this.registerConnectionEstablished(socket)
+    this.registerPlayerJoined(socket)
+    this.registerStart(socket)
+    this.registerUpdateBoard(socket)
+    this.registerKeyPress(socket)
+
     socket.on('connect', () => {
       console.log('Client socket connection established')
-
-      this.registerPlayerJoined(socket)
-      this.registerStart(socket)
-      this.registerUpdateBoard(socket)
-      this.registerKeyPress(socket)
-
       this.joinGame(socket)
     })
   
@@ -55,6 +57,12 @@ class Client {
   private registerUpdateBoard(socket: ClientSocket) {
     socket.on(SocketEvent.UpdateBoard, (players: Player[], bullets: Bullet[]) => {
       this.painter.drawBoard(players, bullets)
+    })
+  }
+
+  private registerConnectionEstablished(socket: ClientSocket) {
+    socket.on(SocketEvent.ConnectionEstablished, (persistentSocketId) => {
+      socket.auth = { persistentSocketId }
     })
   }
 
