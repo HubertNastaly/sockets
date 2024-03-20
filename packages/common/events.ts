@@ -1,11 +1,12 @@
-import { Bullet, GameConfig, Player } from "./model"
+import { Bullet, GameConfig, Player, PlayerDirection } from "./model"
 
 export enum SocketEvent {
   Join = 'join',
   Start = 'start',
   PlayerJoined = 'playerJoined',
   UpdateBoard = 'updateBoard',
-  Fire = 'fire'
+  Fire = 'fire',
+  Move = 'move'
 }
 
 export interface ServerEmittedEventsMap {
@@ -20,4 +21,5 @@ export interface ServerEmittedEventsMap {
 export interface ClientEmittedEventsMap {
   [SocketEvent.Join]: (payload: { name: string }) => void
   [SocketEvent.Fire]: (payload: { column: number }) => void
+  [SocketEvent.Move]: (payload: { direction: PlayerDirection }) => void
 }

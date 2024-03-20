@@ -60,12 +60,22 @@ class Client {
 
   private registerKeyPress(socket: ClientSocket) {
     readline.emitKeypressEvents(process.stdin)
-    process.stdin.on('keypress', (char) => {
-      if('123456789'.includes(char)) {
-        socket.emit(SocketEvent.Fire, { column: Number(char) - 1 })
-      }
-      if(char === 'x') {
-        process.exit()
+    process.stdin.on('keypress', (_, key) => {
+      switch(key.name) {
+        case 'up':
+          socket.emit(SocketEvent.Move, { direction: 'up' })
+          return
+        case 'right':
+          socket.emit(SocketEvent.Move, { direction: 'right' })
+          return
+        case 'down':
+          socket.emit(SocketEvent.Move, { direction: 'down' })
+          return
+        case 'left':
+          socket.emit(SocketEvent.Move, { direction: 'left' })
+          return
+        case 'x':
+          process.exit()
       }
     })
     process.stdin.setRawMode(true)

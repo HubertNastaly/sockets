@@ -1,5 +1,5 @@
 import io from "socket.io";
-import { Bullet, GameConfig, Player, PlayerId } from "../../common/model";
+import { Bullet, GameConfig, Player, PlayerDirection, PlayerId } from "../../common/model";
 import { ClientEmittedEventsMap, ServerEmittedEventsMap } from "../../common/events";
 
 export interface Logger {
@@ -10,6 +10,7 @@ export interface Logger {
 export interface Commander {
   setOnJoinCallback(callback: (id: PlayerId, name: string) => void): void;
   setOnFireCallback(callback: (playerId: PlayerId, column: number) => void): void;
+  setOnMoveCallback(callback: (playerId: PlayerId, direction: PlayerDirection) => void): void;
   start(): void;
   sendPlayerJoined(player: Player, config: GameConfig): void;
   sendUpdateBoard(players: Player[], bullets: Bullet[]): void;

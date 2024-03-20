@@ -1,7 +1,7 @@
 import io from 'socket.io';
 import { Commander, Logger, SocketServer, Socket } from './model'
 import { Server as HttpServer} from 'http'
-import { Bullet, GameConfig, Player, PlayerId } from '../../common/model';
+import { Bullet, GameConfig, Player, PlayerDirection, PlayerId } from '../../common/model';
 import { ClientEmittedEventsMap, ServerEmittedEventsMap, SocketEvent } from '../../common/events';
 
 export class SocketCommander implements Commander {
@@ -10,18 +10,16 @@ export class SocketCommander implements Commander {
   private gameCallbacks: {
     onJoin: (id: string, name: string) => void
     onFire: (playerId: PlayerId, column: number) => void
+    onMove: (playerId: string, direction: PlayerDirection) => void
   }
 
   constructor(logger: Logger) {
     this.logger = logger
     this.io = new io.Server<ClientEmittedEventsMap, ServerEmittedEventsMap>()
     this.gameCallbacks = {
-      onJoin: () => {
-        this.notImplemented('onJoin')
-      },
-      onFire: () => {
-        this.notImplemented('onFire')
-      }
+      onJoin: this.notImplemented('onJoin'),
+      onFire: this.notImplemented('onFire'),
+      onMove: this.notImplemented('onMove')
     }
   }
 
@@ -31,6 +29,7 @@ export class SocketCommander implements Commander {
 
       this.registerOnJoin(socket)
       this.registerOnFire(socket)
+      this.registerOnMove(socket)
     })
 
     this.io.on('connect_error', (error) => {
@@ -52,14 +51,24 @@ export class SocketCommander implements Commander {
     })
   }
 
-  // methods used externally by Game
-
-  setOnJoinCallback(gameCallback: (id: string, name: string) => void) {
-    this.gameCallbacks.onJoin = gameCallback
+  private registerOnMove(socket: Socket) {
+    socket.on(SocketEvent.Move, ({ direction }) => {
+      this.gameCallbacks.onMove(socket.id, direction)
+    })
   }
 
-  setOnFireCallback(gameCallback: (playerId: PlayerId, column: number) => void) {
-    this.gameCallbacks.onFire = gameCallback
+  // methods used externally by Game
+
+  setOnJoinCallback(callback: typeof this.gameCallbacks['onJoin']) {
+    this.gameCallbacks.onJoin = callback
+  }
+
+  setOnFireCallback(callback: typeof this.gameCallbacks['onFire']) {
+    this.gameCallbacks.onFire = callback
+  }
+
+  setOnMoveCallback(callback: typeof this.gameCallbacks['onMove']) {
+    this.gameCallbacks.onMove = callback
   }
 
   start() {
@@ -76,6 +85,8 @@ export class SocketCommander implements Commander {
   }
 
   private notImplemented(detail: string) {
-    throw new Error('Not implmented: ' + detail)
+    return () => {
+      throw new Error('Not implmented: ' + detail)
+    }
   }
 }
