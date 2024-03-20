@@ -22,7 +22,8 @@ export class Game {
   private readonly logger: Logger
 
   private gameState: GameState = GameState.Waiting
-  private players: Record<PlayerId, Player>
+  private playersMap: Record<PlayerId, Player>
+  private players: Player[]
   private bullets: Bullet[]
 
   private gameLoop: NodeJS.Timeout | null
@@ -33,7 +34,8 @@ export class Game {
       rows: 10,
       playersNumber: 2
     }
-    this.players = {}
+    this.playersMap = {}
+    this.players = []
     this.bullets = []
     this.logger = logger
     this.commander = commander
@@ -47,15 +49,17 @@ export class Game {
   }
 
   private addPlayer(id: string, name: string) {
-    if(this.players[id]) {
+    if(this.playersMap[id]) {
       throw new Error(`Player with id ${id} already exists`)
     }
-    this.players[id] = { id, name, position: [0, Object.values(this.players).length], direction: [0, 1] }
+    const player: Player = { id, name, position: [0, this.players.length], direction: [0, 1] }
+    this.playersMap[id] = player
+    this.players.push(player)
     this.logger.log(`Player ${name} (id: ${id}) joined`)
 
-    this.commander.sendPlayerJoined(this.players[id], this.config)
+    this.commander.sendPlayerJoined(this.playersMap[id], this.config)
     
-    if(Object.keys(this.players).length === this.config.playersNumber) {
+    if(this.players.length === this.config.playersNumber) {
       this.start()
     }
   }
@@ -77,20 +81,21 @@ export class Game {
       .filter(({ position: [_, y] }) => y >= 0 || y < this.config.rows)
 
     this.bullets = updatedBullets
-    this.commander.sendUpdateBoard(Object.values(this.players), updatedBullets)
+    this.commander.sendUpdateBoard(this.players, updatedBullets)
   }
 
   private movePlayer(playerId: PlayerId, playerDirection: PlayerDirection) {
-    const direction = DIRECTIONS_MAP[playerDirection]
-    this.move(this.players[playerId], direction)
-  }
+    const [dx, dy] = DIRECTIONS_MAP[playerDirection]
+    const player = this.playersMap[playerId]
+    const [px, py] = player.position
+    const x = this.clampX(px + dx)
+    const y = this.clampY(py + dy)
 
-  private move(movable: { position: Vector }, [dx, dy]: Direction) {
-    // check if field is occupied
-    const [mx, my] = movable.position
-    const x = this.clampX(mx + dx)
-    const y = this.clampY(my + dy)
-    movable.position = [x, y]
+    const collidesWithAnotherPlayer =
+      this.players.some(({ id, position: [_x, _y] }) => _x === x && _y === y && id !== playerId)
+    if(!collidesWithAnotherPlayer) {
+      player.position = [x, y]
+    }
   }
 
   private createBullet(playerId: PlayerId, column: number) {
