@@ -1,6 +1,6 @@
 import readline from 'readline'
 import { connect } from 'socket.io-client'
-import { Bullet } from '../../common/model'
+import { Bullet, Player } from '../../common/model'
 import { ClientSocket } from './model'
 import { ConsolePainter } from './consolePainter'
 import { SocketEvent } from '../../common/events'
@@ -42,20 +42,19 @@ class Client {
   private registerStart(socket: ClientSocket) {
     socket.on(SocketEvent.Start, () => {
       console.log('Game started')
-      this.painter.drawBoard([], false)
+      this.painter.drawBoard([], [], false)
     })
   }
 
   private registerPlayerJoined(socket: ClientSocket) {
-    socket.on(SocketEvent.PlayerJoined, ({ player, config }) => {
+    socket.on(SocketEvent.PlayerJoined, ({ config }) => {
       this.painter.initialize(config.columns, config.rows)
-      console.log('Player joined', { player })
     })
   }
 
   private registerUpdateBoard(socket: ClientSocket) {
-    socket.on(SocketEvent.UpdateBoard, (bullets: Bullet[]) => {
-      this.painter.drawBoard(bullets)
+    socket.on(SocketEvent.UpdateBoard, (players: Player[], bullets: Bullet[]) => {
+      this.painter.drawBoard(players, bullets)
     })
   }
 

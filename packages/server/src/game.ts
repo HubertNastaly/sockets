@@ -7,7 +7,6 @@ enum GameState {
   Ended
 }
 
-const TARGET_PLAYERS_NUMBER = 2
 const FRAME_INTERVAL = 100 //ms
 
 export class Game {
@@ -23,8 +22,9 @@ export class Game {
 
   constructor(logger: Logger, commander: Commander) {
     this.config = {
-      columns: 7,
-      rows: 10
+      columns: 10,
+      rows: 10,
+      playersNumber: 2
     }
     this.players = {}
     this.bullets = []
@@ -42,13 +42,12 @@ export class Game {
     if(this.players[id]) {
       throw new Error(`Player with id ${id} already exists`)
     }
-    const playerCount = Object.keys(this.players).length
-    this.players[id] = { id, name, isFirst: playerCount === 0 }
+    this.players[id] = { id, name, position: [0, Object.values(this.players).length], direction: [0, 1] }
     this.logger.log(`Player ${name} (id: ${id}) joined`)
 
     this.commander.sendPlayerJoined(this.players[id], this.config)
     
-    if(playerCount + 1 === TARGET_PLAYERS_NUMBER) {
+    if(Object.keys(this.players).length === this.config.playersNumber) {
       this.start()
     }
   }
@@ -64,43 +63,28 @@ export class Game {
   private updateBoard() {
     const updatedBullets = this.bullets
       .map((bullet) => {
-        bullet.y += bullet.direction
+        bullet.position[1] += bullet.direction
         return bullet
       })
-      .filter(({ y }) => y >= 0 || y < this.config.rows)
+      .filter(({ position: [_, y] }) => y >= 0 || y < this.config.rows)
 
-    const inversedBullets = updatedBullets.map(({ x, y, direction }): Bullet => ({
-      x: this.config.columns - 1 - x,
-      y: this.config.rows - 1 - y,
-      direction: direction === 1 ? -1 : 1
-    }))
-
-    Object.values(this.players).forEach(({ id, isFirst }) => {
-      this.commander.sendUpdateBoard(id, isFirst ? updatedBullets : inversedBullets)
-    })
+    this.bullets = updatedBullets
+    this.commander.sendUpdateBoard(Object.values(this.players), updatedBullets)
   }
 
   private createBullet(playerId: PlayerId, column: number) {
-    const { isFirst } = this.players[playerId]
-    const bullet: Bullet = {
-      x: column,
-      y: this.config.rows - 1,
-      direction: -1
-    }
-    this.bullets.push(isFirst ? bullet : this.inverseBullet(bullet))
+    // const { isFirst } = this.players[playerId]
+    // const bullet: Bullet = {
+    //   x: column,
+    //   y: this.config.rows - 1,
+    //   direction: -1
+    // }
+    // this.bullets.push(isFirst ? bullet : this.inverseBullet(bullet))
   }
 
   private end() {
     console.log('-- end game --')
     clearInterval(this.gameLoop!)
     this.gameState = GameState.Ended
-  }
-
-  private inverseBullet({ x, y, direction }: Bullet): Bullet {
-    return {
-      x: this.config.columns - 1 - x,
-      y: this.config.rows - 1 - y,
-      direction: direction === 1 ? -1 : 1
-    }
   }
 }

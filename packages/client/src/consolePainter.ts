@@ -1,32 +1,35 @@
 import readline from 'readline'
-import { Bullet } from "../../common/model";
+import { Bullet, Player, Vector } from "../../common/model";
 import { Painter } from "./model";
 
+type DrawObject = {
+  position: Vector
+  char: string
+}
+
 export class ConsolePainter implements Painter {
+  private readonly bulletChar
+  private readonly playerChar
+  private readonly emptyFieldChar
+
   private boardWidth: number = 0
   private boardHeight: number = 0
   private drawAreaWidth: number = 0
   private drawAreaHeight: number = 0
   private horizontalEdge: string = ''
-  private numbersRow: string = ''
 
-  constructor() {}
+  constructor() {
+    this.bulletChar = '*'
+    this.playerChar = '$'
+    this.emptyFieldChar = ' '
+  }
 
   public initialize(boardWidth: number, boardHeight: number) {
     this.boardWidth = boardWidth
     this.boardHeight = boardHeight
-    this.drawAreaHeight = this.boardHeight + 3 // 2 horizontalEdges + numbers
+    this.drawAreaHeight = this.boardHeight + 2 // 2 horizontalEdges
     this.drawAreaWidth = boardWidth + 2 // left & right edge
     this.horizontalEdge = '_'.repeat(this.drawAreaWidth)
-    this.numbersRow = this.constructNumbersRow()
-  }
-
-  private constructNumbersRow() {
-    let numbersRow = ' '
-    for(let i=0; i<this.boardWidth; i++) {
-      numbersRow += (i + 1)
-    }
-    return numbersRow
   }
 
   private clearBoard() {
@@ -34,31 +37,34 @@ export class ConsolePainter implements Painter {
     readline.clearLine(process.stdout, 0)
   }
 
-  public drawBoard(bullets: Bullet[], shouldClear = true) {
+  public drawBoard(players: Player[], bullets: Bullet[], shouldClear = true) {
     if(shouldClear) {
       this.clearBoard()
     }
 
-    bullets.sort((a, b) => a.y === b.y ? a.x - b.x : a.y - b.y)
+    const objects = [
+      ...players.map(({ position }): DrawObject => ({ position, char: this.playerChar })),
+      ...bullets.map(({ position }): DrawObject => ({ position, char: this.bulletChar }))
+    ].sort(({ position: [ax, ay] }, { position: [bx, by]}) => ay === by ? ax - bx : ay - by)
 
     const lines: string[] = []
     lines.push(this.horizontalEdge)
 
-    let bulletIndex = 0
+    let objectIndex = 0
     for(let rowIndex=0; rowIndex<this.boardHeight; rowIndex++) {
       let row = ''
 
-      while(bulletIndex < bullets.length && bullets[bulletIndex].y === rowIndex) {
-        row += ' '.repeat(bullets[bulletIndex].x - row.length)
-        row += '*'
-        bulletIndex++
+      while(objectIndex < objects.length && objects[objectIndex].position[1] === rowIndex) {
+        row += this.emptyFieldChar.repeat(objects[objectIndex].position[0] - row.length)
+        row += objects[objectIndex].char
+        objectIndex++
       } 
-      row += ' '.repeat(this.boardWidth - row.length)
+      row += this.emptyFieldChar.repeat(this.boardWidth - row.length)
 
       lines.push(`|${row}|`)
     }
 
-    lines.push(this.horizontalEdge, this.numbersRow)
+    lines.push(this.horizontalEdge)
 
     console.log(lines.join('\n'))
   }

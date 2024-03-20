@@ -14,7 +14,7 @@ export interface ServerEmittedEventsMap {
     player: Player
     config: GameConfig
   }) => void
-  [SocketEvent.UpdateBoard]: (bullets: Bullet[]) => void
+  [SocketEvent.UpdateBoard]: (players: Player[], bullets: Bullet[]) => void
 }
 
 export interface ClientEmittedEventsMap {

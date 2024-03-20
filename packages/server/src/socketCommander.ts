@@ -71,9 +71,8 @@ export class SocketCommander implements Commander {
     sockets.get(player.id)?.emit(SocketEvent.PlayerJoined, { player, config })
   }
 
-  sendUpdateBoard(playerId: PlayerId, bullets: Bullet[]) {
-    const { sockets } = this.io.sockets
-    sockets.get(playerId)?.emit(SocketEvent.UpdateBoard, bullets)
+  sendUpdateBoard(players: Player[], bullets: Bullet[]) {
+    this.io.emit(SocketEvent.UpdateBoard, players, bullets)
   }
 
   private notImplemented(detail: string) {

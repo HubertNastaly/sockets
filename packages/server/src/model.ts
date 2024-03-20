@@ -12,7 +12,7 @@ export interface Commander {
   setOnFireCallback(callback: (playerId: PlayerId, column: number) => void): void;
   start(): void;
   sendPlayerJoined(player: Player, config: GameConfig): void;
-  sendUpdateBoard(players: PlayerId, bullets: Bullet[]): void;
+  sendUpdateBoard(players: Player[], bullets: Bullet[]): void;
 }
 
 export type SocketServer = io.Server<ClientEmittedEventsMap, ServerEmittedEventsMap>
