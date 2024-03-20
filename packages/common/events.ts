@@ -4,7 +4,8 @@ export enum SocketEvent {
   Join = 'join',
   Start = 'start',
   PlayerJoined = 'playerJoined',
-  UpdateBoard = 'updateBoard'
+  UpdateBoard = 'updateBoard',
+  Fire = 'fire'
 }
 
 export interface ServerEmittedEventsMap {
@@ -18,4 +19,5 @@ export interface ServerEmittedEventsMap {
 
 export interface ClientEmittedEventsMap {
   [SocketEvent.Join]: (payload: { name: string }) => void
+  [SocketEvent.Fire]: (payload: { column: number }) => void
 }

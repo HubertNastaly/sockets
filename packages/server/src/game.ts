@@ -34,9 +34,8 @@ export class Game {
   }
 
   public initialize() {
-    // hardcode bullet
-    this.bullets.push({ x: 2, y: 0, direction: 1 })
     this.commander.setOnJoinCallback(this.addPlayer.bind(this))
+    this.commander.setOnFireCallback(this.createBullet.bind(this))
   }
 
   private addPlayer(id: string, name: string) {
@@ -63,26 +62,45 @@ export class Game {
   }
 
   private updateBoard() {
-    for(const bullet of this.bullets) {
-      bullet.y += bullet.direction
-      if(bullet.y < 0 || bullet.y >= this.config.rows) {
-        this.end()
-      }
-    }
+    const updatedBullets = this.bullets
+      .map((bullet) => {
+        bullet.y += bullet.direction
+        return bullet
+      })
+      .filter(({ y }) => y >= 0 || y < this.config.rows)
 
-    const inversedBullets = this.bullets.map(({ x, y, direction }): Bullet => ({
+    const inversedBullets = updatedBullets.map(({ x, y, direction }): Bullet => ({
       x: this.config.columns - 1 - x,
       y: this.config.rows - 1 - y,
       direction: direction === 1 ? -1 : 1
     }))
 
     Object.values(this.players).forEach(({ id, isFirst }) => {
-      this.commander.sendUpdateBoard(id, isFirst ? this.bullets : inversedBullets)
+      this.commander.sendUpdateBoard(id, isFirst ? updatedBullets : inversedBullets)
     })
   }
 
+  private createBullet(playerId: PlayerId, column: number) {
+    const { isFirst } = this.players[playerId]
+    const bullet: Bullet = {
+      x: column,
+      y: this.config.rows - 1,
+      direction: -1
+    }
+    this.bullets.push(isFirst ? bullet : this.inverseBullet(bullet))
+  }
+
   private end() {
+    console.log('-- end game --')
     clearInterval(this.gameLoop!)
     this.gameState = GameState.Ended
+  }
+
+  private inverseBullet({ x, y, direction }: Bullet): Bullet {
+    return {
+      x: this.config.columns - 1 - x,
+      y: this.config.rows - 1 - y,
+      direction: direction === 1 ? -1 : 1
+    }
   }
 }

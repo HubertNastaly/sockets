@@ -1,3 +1,4 @@
+import readline from 'readline'
 import { connect } from 'socket.io-client'
 import { Bullet } from '../../common/model'
 import { ClientSocket } from './model'
@@ -20,9 +21,11 @@ class Client {
   
     socket.on('connect', () => {
       console.log('Client socket connection established')
+
       this.registerPlayerJoined(socket)
       this.registerStart(socket)
       this.registerUpdateBoard(socket)
+      this.registerKeyPress(socket)
 
       this.joinGame(socket)
     })
@@ -54,6 +57,19 @@ class Client {
     socket.on(SocketEvent.UpdateBoard, (bullets: Bullet[]) => {
       this.painter.drawBoard(bullets)
     })
+  }
+
+  private registerKeyPress(socket: ClientSocket) {
+    readline.emitKeypressEvents(process.stdin)
+    process.stdin.on('keypress', (char) => {
+      if('123456789'.includes(char)) {
+        socket.emit(SocketEvent.Fire, { column: Number(char) - 1 })
+      }
+      if(char === 'x') {
+        process.exit()
+      }
+    })
+    process.stdin.setRawMode(true)
   }
 }
 

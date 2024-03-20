@@ -1,22 +1,26 @@
-import { Server, Socket } from 'socket.io';
-import { Commander, Logger, ServerSocket } from './model'
+import io from 'socket.io';
+import { Commander, Logger, SocketServer, Socket } from './model'
 import { Server as HttpServer} from 'http'
 import { Bullet, GameConfig, Player, PlayerId } from '../../common/model';
 import { ClientEmittedEventsMap, ServerEmittedEventsMap, SocketEvent } from '../../common/events';
 
 export class SocketCommander implements Commander {
-  private readonly io: ServerSocket
+  private readonly io: SocketServer
   private readonly logger: Logger
   private gameCallbacks: {
     onJoin: (id: string, name: string) => void
+    onFire: (playerId: PlayerId, column: number) => void
   }
 
   constructor(logger: Logger) {
     this.logger = logger
-    this.io = new Server<ClientEmittedEventsMap, ServerEmittedEventsMap>()
+    this.io = new io.Server<ClientEmittedEventsMap, ServerEmittedEventsMap>()
     this.gameCallbacks = {
       onJoin: () => {
-        throw new Error('Not implemented: onJoin')
+        this.notImplemented('onJoin')
+      },
+      onFire: () => {
+        this.notImplemented('onFire')
       }
     }
   }
@@ -26,6 +30,7 @@ export class SocketCommander implements Commander {
       this.logger.log(`Socket connection established for socket: ${socket.id}`)
 
       this.registerOnJoin(socket)
+      this.registerOnFire(socket)
     })
 
     this.io.on('connect_error', (error) => {
@@ -36,8 +41,14 @@ export class SocketCommander implements Commander {
   }
 
   private registerOnJoin(socket: Socket) {
-    socket.on(SocketEvent.Join, (data: { name: string }) => {
-      this.gameCallbacks.onJoin(socket.id, data.name)
+    socket.on(SocketEvent.Join, ({ name }) => {
+      this.gameCallbacks.onJoin(socket.id, name)
+    })
+  }
+
+  private registerOnFire(socket: Socket) {
+    socket.on(SocketEvent.Fire, ({ column }) => {
+      this.gameCallbacks.onFire(socket.id, column)
     })
   }
 
@@ -45,6 +56,10 @@ export class SocketCommander implements Commander {
 
   setOnJoinCallback(gameCallback: (id: string, name: string) => void) {
     this.gameCallbacks.onJoin = gameCallback
+  }
+
+  setOnFireCallback(gameCallback: (playerId: PlayerId, column: number) => void) {
+    this.gameCallbacks.onFire = gameCallback
   }
 
   start() {
@@ -59,5 +74,9 @@ export class SocketCommander implements Commander {
   sendUpdateBoard(playerId: PlayerId, bullets: Bullet[]) {
     const { sockets } = this.io.sockets
     sockets.get(playerId)?.emit(SocketEvent.UpdateBoard, bullets)
+  }
+
+  private notImplemented(detail: string) {
+    throw new Error('Not implmented: ' + detail)
   }
 }
