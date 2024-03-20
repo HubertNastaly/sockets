@@ -9,7 +9,7 @@ export interface Logger {
 
 export interface Commander {
   setOnJoinCallback(callback: (id: PlayerId, name: string) => void): void;
-  setOnFireCallback(callback: (playerId: PlayerId, column: number) => void): void;
+  setOnFireCallback(callback: (playerId: PlayerId) => void): void;
   setOnMoveCallback(callback: (playerId: PlayerId, direction: PlayerDirection) => void): void;
   start(): void;
   sendPlayerJoined(player: Player, config: GameConfig): void;

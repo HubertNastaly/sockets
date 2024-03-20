@@ -74,6 +74,9 @@ class Client {
         case 'left':
           socket.emit(SocketEvent.Move, { direction: 'left' })
           return
+        case 'space':
+          socket.emit(SocketEvent.Fire)
+          return
         case 'x':
           process.exit()
       }

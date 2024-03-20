@@ -9,7 +9,7 @@ export class SocketCommander implements Commander {
   private readonly logger: Logger
   private gameCallbacks: {
     onJoin: (id: string, name: string) => void
-    onFire: (playerId: PlayerId, column: number) => void
+    onFire: (playerId: PlayerId) => void
     onMove: (playerId: string, direction: PlayerDirection) => void
   }
 
@@ -46,8 +46,8 @@ export class SocketCommander implements Commander {
   }
 
   private registerOnFire(socket: Socket) {
-    socket.on(SocketEvent.Fire, ({ column }) => {
-      this.gameCallbacks.onFire(socket.id, column)
+    socket.on(SocketEvent.Fire, () => {
+      this.gameCallbacks.onFire(socket.id)
     })
   }
 

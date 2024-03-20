@@ -19,5 +19,5 @@ export type PlayerDirection = 'up' | 'right' | 'down' | 'left'
 
 export interface Bullet {
   position: Vector
-  direction: 1 | -1 // down | up
+  direction: Direction
 }

@@ -20,6 +20,6 @@ export interface ServerEmittedEventsMap {
 
 export interface ClientEmittedEventsMap {
   [SocketEvent.Join]: (payload: { name: string }) => void
-  [SocketEvent.Fire]: (payload: { column: number }) => void
+  [SocketEvent.Fire]: () => void
   [SocketEvent.Move]: (payload: { direction: PlayerDirection }) => void
 }

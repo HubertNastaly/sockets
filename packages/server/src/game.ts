@@ -7,7 +7,7 @@ enum GameState {
   Ended
 }
 
-const FRAME_INTERVAL = 100 //ms
+const FRAME_INTERVAL = 50 //ms
 
 const DIRECTIONS_MAP: Record<PlayerDirection, Direction> = {
   'down': [0, 1],
@@ -30,8 +30,8 @@ export class Game {
 
   constructor(logger: Logger, commander: Commander) {
     this.config = {
-      columns: 10,
-      rows: 10,
+      columns: 30,
+      rows: 30,
       playersNumber: 2
     }
     this.playersMap = {}
@@ -44,7 +44,7 @@ export class Game {
 
   public initialize() {
     this.commander.setOnJoinCallback(this.addPlayer.bind(this))
-    this.commander.setOnFireCallback(this.createBullet.bind(this))
+    this.commander.setOnFireCallback(this.fireBullet.bind(this))
     this.commander.setOnMoveCallback(this.movePlayer.bind(this))
   }
 
@@ -69,43 +69,55 @@ export class Game {
     this.logger.log('Game started')
     this.commander.start()
 
-    this.gameLoop = setInterval(this.updateBoard.bind(this), FRAME_INTERVAL)
+    this.gameLoop = setInterval(() => {
+      this.updateBoard()
+      this.sendUpdateBoard()
+    }, FRAME_INTERVAL)
   }
 
   private updateBoard() {
     const updatedBullets = this.bullets
       .map((bullet) => {
-        bullet.position[1] += bullet.direction
+        bullet.position[0] += bullet.direction[0]
+        bullet.position[1] += bullet.direction[1]
         return bullet
       })
-      .filter(({ position: [_, y] }) => y >= 0 || y < this.config.rows)
+      .filter(({ position: [x, y] }) => x >= 0 && x < this.config.columns && y >= 0 && y < this.config.rows)
 
     this.bullets = updatedBullets
-    this.commander.sendUpdateBoard(this.players, updatedBullets)
+    this.sendUpdateBoard()
   }
 
   private movePlayer(playerId: PlayerId, playerDirection: PlayerDirection) {
-    const [dx, dy] = DIRECTIONS_MAP[playerDirection]
+    const direction = DIRECTIONS_MAP[playerDirection]
     const player = this.playersMap[playerId]
+    player.direction = direction
+
     const [px, py] = player.position
-    const x = this.clampX(px + dx)
-    const y = this.clampY(py + dy)
+    const x = this.clampX(px + direction[0])
+    const y = this.clampY(py + direction[1])
 
     const collidesWithAnotherPlayer =
       this.players.some(({ id, position: [_x, _y] }) => _x === x && _y === y && id !== playerId)
+
     if(!collidesWithAnotherPlayer) {
       player.position = [x, y]
+      this.sendUpdateBoard()
     }
   }
 
-  private createBullet(playerId: PlayerId, column: number) {
-    // const { isFirst } = this.players[playerId]
-    // const bullet: Bullet = {
-    //   x: column,
-    //   y: this.config.rows - 1,
-    //   direction: -1
-    // }
-    // this.bullets.push(isFirst ? bullet : this.inverseBullet(bullet))
+  private fireBullet(playerId: PlayerId) {
+    const { position: [px, py], direction } = this.playersMap[playerId]
+    const bullet: Bullet = {
+      position: [px + direction[0], py + direction[1]],
+      direction
+    }
+    this.bullets.push(bullet)
+    this.sendUpdateBoard()
+  }
+
+  private sendUpdateBoard() {
+    this.commander.sendUpdateBoard(this.players, this.bullets)
   }
 
   private end() {
