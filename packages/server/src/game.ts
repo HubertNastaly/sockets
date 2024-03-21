@@ -92,15 +92,31 @@ export class Game {
     const direction = DIRECTIONS_MAP[playerDirection]
     const player = this.playersMap[playerId]
     player.direction = direction
-
+    
+    const [dirX, dirY] = direction
     const [px, py] = player.position
-    const x = this.clampX(px + direction[0])
-    const y = this.clampY(py + direction[1])
+    const x = this.clampX(px + dirX)
+    const y = this.clampY(py + dirY)
 
     const collidesWithAnotherPlayer =
       this.players.some(({ id, position: [_x, _y] }) => _x === x && _y === y && id !== playerId)
 
-    if(!collidesWithAnotherPlayer) {
+    const willStepOnBulletFromBack = 
+      this.bullets.some(({ position: [_x, _y], direction: [_dirX, _dirY] }) => (
+        _x === x &&
+        _y === y &&
+        _dirX === dirX &&
+        _dirY === dirY && (
+          (dirX === 1 && px < _x) ||
+          (dirX === -1 && px > _x )||
+          (dirY === 1 && py < _y) ||
+          (dirY === -1 && py > _y)
+        )
+      ))
+
+    const canMoveOnDesiredPosition = !collidesWithAnotherPlayer && !willStepOnBulletFromBack
+
+    if(canMoveOnDesiredPosition) {
       player.position = [x, y]
       this.sendUpdateBoard()
     }
