@@ -2,6 +2,7 @@ export interface GameConfig {
   rows: number
   columns: number
   playersNumber: number
+  initialLifePoints: number
 }
 
 export type PlayerId = string
@@ -11,6 +12,7 @@ export interface Player {
   name: string
   position: Vector
   direction: Direction
+  lifePoints: number
 }
 
 export type Vector = [x: number, y: number]

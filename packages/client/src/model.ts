@@ -4,7 +4,7 @@ import { ClientEmittedEventsMap, ServerEmittedEventsMap } from "../../common/eve
 
 export interface Painter {
   initialize(width: number, height: number): void;
-  drawBoard(players: Player[], bullets: Bullet[], shouldClear?: boolean): void;
+  drawBoard(players: Player[], bullets: Bullet[], focusedPlayer: Player): void;
 }
 
 export type ClientSocket = Socket<ServerEmittedEventsMap, ClientEmittedEventsMap>

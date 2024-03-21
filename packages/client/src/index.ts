@@ -10,10 +10,12 @@ const SERVER_URL = 'http://localhost:3000'
 class Client {
   public readonly name: string
   private painter: ConsolePainter
+  private player: Player
 
   constructor() {
     this.name = 'Adam'
     this.painter = new ConsolePainter()
+    this.player = { id: '', name: '', position: [0,0], direction: [0,1], lifePoints: 0 }
   }
 
   public run() {
@@ -44,19 +46,21 @@ class Client {
   private registerStart(socket: ClientSocket) {
     socket.on(SocketEvent.Start, () => {
       console.log('Game started')
-      this.painter.drawBoard([], [], false)
+      this.painter.drawBoard([], [], this.player)
     })
   }
 
   private registerPlayerJoined(socket: ClientSocket) {
-    socket.on(SocketEvent.PlayerJoined, ({ config }) => {
+    socket.on(SocketEvent.PlayerJoined, ({ player, config }) => {
       this.painter.initialize(config.columns, config.rows)
+      this.player = player
     })
   }
 
   private registerUpdateBoard(socket: ClientSocket) {
     socket.on(SocketEvent.UpdateBoard, (players: Player[], bullets: Bullet[]) => {
-      this.painter.drawBoard(players, bullets)
+      this.painter.clearBoard()
+      this.painter.drawBoard(players, bullets, this.player)
     })
   }
 

@@ -14,6 +14,7 @@ export class ConsolePainter implements Painter {
   private readonly playerChar
   private readonly emptyFieldChar
   private readonly verticalEdgeChar
+  private readonly lifePointChar
   private readonly playerColors: Chalk[]
 
   private boardWidth: number = 0
@@ -27,27 +28,24 @@ export class ConsolePainter implements Painter {
     this.playerChar = '$'
     this.emptyFieldChar = ' '
     this.verticalEdgeChar = '|'
+    this.lifePointChar = '♥️'
     this.playerColors = [chalk.red, chalk.blue, chalk.green]
   }
 
   public initialize(boardWidth: number, boardHeight: number) {
     this.boardWidth = boardWidth
     this.boardHeight = boardHeight
-    this.drawAreaHeight = this.boardHeight + 2 // 2 horizontalEdges
+    this.drawAreaHeight = this.boardHeight + 4 // 2 horizontalEdges + 2 lines for life points
     this.drawAreaWidth = boardWidth + 2 // left & right edge
     this.horizontalEdge = '_'.repeat(this.drawAreaWidth)
   }
 
-  private clearBoard() {
+  public clearBoard() {
     readline.moveCursor(process.stdout, 0, -(this.drawAreaHeight))
     readline.clearLine(process.stdout, 0)
   }
 
-  public drawBoard(players: Player[], bullets: Bullet[], shouldClear = true) {
-    if(shouldClear) {
-      this.clearBoard()
-    }
-
+  public drawBoard(players: Player[], bullets: Bullet[], focusedPlayer: Player) {
     const objects = [
       ...players.map(({ position }, index): DrawObject => ({ position, char: this.playerChar, color: this.playerColors[index] })),
       ...bullets.map(({ position }): DrawObject => ({ position, char: this.bulletChar }))
@@ -73,5 +71,6 @@ export class ConsolePainter implements Painter {
     }
 
     process.stdout.write(this.horizontalEdge + '\n')
+    process.stdout.write('\nLife: ' + '♥️ '.repeat(focusedPlayer.lifePoints).trim() + '\n')
   }
 }

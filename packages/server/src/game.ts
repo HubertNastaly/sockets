@@ -32,7 +32,8 @@ export class Game {
     this.config = {
       columns: 30,
       rows: 30,
-      playersNumber: 2
+      playersNumber: 2,
+      initialLifePoints: 3
     }
     this.playersMap = {}
     this.players = []
@@ -52,7 +53,13 @@ export class Game {
     if(this.playersMap[id]) {
       throw new Error(`Player with id ${id} already exists`)
     }
-    const player: Player = { id, name, position: [0, this.players.length], direction: [0, 1] }
+    const player: Player = {
+      id,
+      name,
+      position: [0, this.players.length],
+      direction: [0, 1],
+      lifePoints: this.config.initialLifePoints
+    }
     this.playersMap[id] = player
     this.players.push(player)
     this.logger.log(`Player ${name} (id: ${id}) joined`)
