@@ -56,7 +56,7 @@ export class Game {
     const player: Player = {
       id,
       name,
-      position: [0, this.players.length],
+      position: this.randomizePlayerPosition(),
       direction: [0, 1],
       lifePoints: this.config.initialLifePoints
     }
@@ -69,6 +69,24 @@ export class Game {
     if(this.players.length === this.config.playersNumber) {
       this.start()
     }
+  }
+
+  private randomizePlayerPosition(): Vector {
+    const unavailableColumns = this.players.map(({ position: [x] }) => x)
+    const unavailableRows = this.players.map(({ position: [y] }) => y)
+
+    const availableColumns = [...new Array(this.config.columns)]
+      .map((_, index) => index)
+      .filter(index => !unavailableColumns.includes(index))
+
+    const availableRows = [...new Array(this.config.rows)]
+      .map((_, index) => index)
+      .filter(index => !unavailableRows.includes(index))
+
+    const columnIndex = Math.round(Math.random() * availableColumns.length)
+    const rowIndex = Math.round(Math.random() * availableRows.length)
+
+    return [columnIndex, rowIndex]
   }
 
   private start() {
