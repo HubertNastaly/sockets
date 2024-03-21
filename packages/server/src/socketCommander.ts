@@ -29,9 +29,8 @@ export class SocketCommander implements Commander {
 
   public initialize(httpServer: HttpServer) {
     this.io.on('connection', (socket) => {
-      this.logger.log(`Socket connection established for socket: ${socket.id}`)
-
       if(!socket.recovered) {
+        this.logger.log(`Socket connection established for socket: ${socket.id}`, { socket })
         this.registerOnJoin(socket)
 
         const persistentSocketId = socket.id
@@ -41,6 +40,7 @@ export class SocketCommander implements Commander {
 
         socket.emit(SocketEvent.ConnectionEstablished, persistentSocketId)
       } else {
+        this.logger.log(`Socket reconnected: `, { socket, persistentSocketIdToSocket: this.persistentSocketIdToSocket })
         const { persistentSocketId } = socket.handshake.auth
         if(!persistentSocketId) {
           throw new Error('Missing persistent socket id')
