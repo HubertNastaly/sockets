@@ -91,8 +91,12 @@ export class SocketCommander implements Commander {
     this.gameCallbacks.onMove = callback
   }
 
-  start() {
+  sendGameStarted() {
     this.io.emit(SocketEvent.Start)
+  }
+
+  sendGameEnded(winner: Player) {
+    this.io.emit(SocketEvent.GameEnded, winner)
   }
 
   sendPlayerJoined(player: Player, config: GameConfig) {

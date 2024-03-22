@@ -23,7 +23,7 @@ export class Game {
 
   private gameState: GameState = GameState.Waiting
   private playersMap: Record<PlayerId, Player>
-  private players: Player[]
+  private livePlayers: Player[]
   private bullets: Bullet[]
 
   private gameLoop: NodeJS.Timeout | null
@@ -36,7 +36,7 @@ export class Game {
       initialLifePoints: 3
     }
     this.playersMap = {}
-    this.players = []
+    this.livePlayers = []
     this.bullets = []
     this.logger = logger
     this.commander = commander
@@ -61,19 +61,19 @@ export class Game {
       lifePoints: this.config.initialLifePoints
     }
     this.playersMap[id] = player
-    this.players.push(player)
+    this.livePlayers.push(player)
     this.logger.log(`Player ${name} (id: ${id}) joined`)
 
     this.commander.sendPlayerJoined(this.playersMap[id], this.config)
     
-    if(this.players.length === this.config.playersNumber) {
+    if(this.livePlayers.length === this.config.playersNumber) {
       this.start()
     }
   }
 
   private randomizePlayerPosition(): Vector {
-    const unavailableColumns = this.players.map(({ position: [x] }) => x)
-    const unavailableRows = this.players.map(({ position: [y] }) => y)
+    const unavailableColumns = this.livePlayers.map(({ position: [x] }) => x)
+    const unavailableRows = this.livePlayers.map(({ position: [y] }) => y)
 
     const availableColumns = [...new Array(this.config.columns)]
       .map((_, index) => index)
@@ -92,7 +92,7 @@ export class Game {
   private start() {
     this.gameState = GameState.Started
     this.logger.log('Game started')
-    this.commander.start()
+    this.commander.sendGameStarted()
 
     this.gameLoop = setInterval(() => {
       this.updateBoard()
@@ -101,20 +101,23 @@ export class Game {
   }
 
   private updateBoard() {
-    const updatedBullets = this.bullets
+    const updatedBullets = this.moveBullets()
+    const remainingBullets = this.livePlayers.reduce((bullets, player) => {
+      return this.applyBulletShoots(player, bullets)
+    }, updatedBullets)
+
+    this.bullets = remainingBullets
+    this.sendUpdateBoard()
+  }
+
+  private moveBullets() {
+    return this.bullets
       .map((bullet) => {
         bullet.position[0] += bullet.direction[0]
         bullet.position[1] += bullet.direction[1]
         return bullet
       })
       .filter(({ position }) => this.isOnBoard(position))
-
-    const remainingBullets = this.players.reduce((bullets, player) => {
-      return this.applyBulletShoots(player, bullets)
-    }, updatedBullets)
-
-    this.bullets = remainingBullets
-    this.sendUpdateBoard()
   }
 
   private movePlayer(playerId: PlayerId, playerDirection: PlayerDirection) {
@@ -128,7 +131,7 @@ export class Game {
     const y = this.clampY(py + dirY)
 
     const collidesWithAnotherPlayer =
-      this.players.some(({ id, position: [_x, _y] }) => _x === x && _y === y && id !== playerId)
+      this.livePlayers.some(({ id, position: [_x, _y] }) => _x === x && _y === y && id !== playerId)
 
     const bulletSteppingOnFromBack = 
       this.bullets.find(bullet => this.isSteppingOnBulletFromBack(player, bullet, [x, y]))
@@ -151,15 +154,27 @@ export class Game {
 
   private applyBulletShoots(player: Player, bullets: Bullet[]): Bullet[] {
     const { position: [px, py] } = player
-    return bullets.filter(bullet => {
+    const remainingBullets = bullets.filter(bullet => {
       const [bx, by] = bullet.position
       if (bx === px && by === py) {
-        player.lifePoints = Math.max(0, player.lifePoints - 1)
-        console.log({ player })
+        this.hurtPlayer(player)
         return false
       }
       return true
     })
+
+    if(this.livePlayers.length < 2) {
+      this.end()
+    }
+
+    return remainingBullets
+  }
+
+  private hurtPlayer(player: Player) {
+    player.lifePoints--
+    if(player.lifePoints === 0) {
+      this.livePlayers = this.livePlayers.filter(({ id }) => id !== player.id)
+    }
   }
 
   private isSteppingOnBulletFromBack(player: Player, bullet: Bullet, desiredPlayerPosition: Vector) {
@@ -184,6 +199,7 @@ export class Game {
   }
 
   private fireBullet(playerId: PlayerId) {
+    // TODO: check if can create (if not just created on the same field)
     const { position: [px, py], direction } = this.playersMap[playerId]
     const bullet: Bullet = {
       position: [px + direction[0], py + direction[1]],
@@ -194,13 +210,21 @@ export class Game {
   }
 
   private sendUpdateBoard() {
-    this.commander.sendUpdateBoard(this.players, this.bullets)
+    if(this.gameState === GameState.Started) {
+      this.commander.sendUpdateBoard(this.livePlayers, this.bullets)
+    }
   }
 
   private end() {
-    console.log('-- end game --')
+    if(this.gameState !== GameState.Started) return;
+
+    this.logger.log('-- Game Ended --')
+
     clearInterval(this.gameLoop!)
     this.gameState = GameState.Ended
+
+    const winner = this.livePlayers.length > 0 ? this.livePlayers.at(0) : undefined
+    this.commander.sendGameEnded(winner)
   }
 
   private isOnBoard([x, y]: Vector) {

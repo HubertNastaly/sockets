@@ -27,6 +27,7 @@ class Client {
     this.registerPlayerJoined(socket)
     this.registerStart(socket)
     this.registerUpdateBoard(socket)
+    this.registerGameEnded(socket)
     this.registerKeyPress(socket)
 
     socket.on('connect', () => {
@@ -68,6 +69,13 @@ class Client {
   private registerConnectionEstablished(socket: ClientSocket) {
     socket.on(SocketEvent.ConnectionEstablished, (persistentSocketId) => {
       socket.auth = { persistentSocketId }
+    })
+  }
+
+  private registerGameEnded(socket: ClientSocket) {
+    socket.on(SocketEvent.GameEnded, (winner?: Player) => {
+      this.painter.clearBoard()
+      this.painter.drawGameEnded(winner)
     })
   }
 

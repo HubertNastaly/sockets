@@ -7,7 +7,8 @@ export enum SocketEvent {
   UpdateBoard = 'updateBoard',
   Fire = 'fire',
   Move = 'move',
-  ConnectionEstablished = 'connectionEstablished'
+  ConnectionEstablished = 'connectionEstablished',
+  GameEnded = 'gameEnded'
 }
 
 export interface ServerEmittedEventsMap {
@@ -18,6 +19,7 @@ export interface ServerEmittedEventsMap {
   }) => void
   [SocketEvent.UpdateBoard]: (players: Player[], bullets: Bullet[]) => void
   [SocketEvent.ConnectionEstablished]: (persistentSocketId: string) => void
+  [SocketEvent.GameEnded]: (winner?: Player) => void
 }
 
 export interface ClientEmittedEventsMap {

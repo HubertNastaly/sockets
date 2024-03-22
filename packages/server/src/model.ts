@@ -11,7 +11,8 @@ export interface Commander {
   setOnJoinCallback(callback: (id: PlayerId, name: string) => void): void;
   setOnFireCallback(callback: (playerId: PlayerId) => void): void;
   setOnMoveCallback(callback: (playerId: PlayerId, direction: PlayerDirection) => void): void;
-  start(): void;
+  sendGameStarted(): void;
+  sendGameEnded(winner?: Player): void;
   sendPlayerJoined(player: Player, config: GameConfig): void;
   sendUpdateBoard(players: Player[], bullets: Bullet[]): void;
 }

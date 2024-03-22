@@ -41,14 +41,26 @@ export class ConsolePainter implements Painter {
   }
 
   public prepareForNewPaint() {
-    // clear life points and white space
-    readline.clearLine(process.stdout, 0)
-    readline.moveCursor(process.stdout, 0, -1)
-    readline.clearLine(process.stdout, 0)
-    readline.moveCursor(process.stdout, 0, -1)
+    // clear life points white space before and new line after
+    readline.moveCursor(process.stdout, 0, -3)
+    readline.clearScreenDown(process.stdout)
 
     // does not need to clear the board as it has fixed size and will be repainted, just move cursor
     readline.moveCursor(process.stdout, 0, -this.drawAreaHeight)
+  }
+
+  public clearBoard() {
+    const totalHeight = this.drawAreaHeight + 2
+    readline.moveCursor(process.stdout, 0, -totalHeight)
+    readline.clearScreenDown(process.stdout)
+  }
+
+  public drawGameEnded(winner?: Player) {
+    process.stdout.write('\n')
+    process.stdout.write('* * * GAME ENDED * * *\n')
+    process.stdout.write(
+      (winner ? `🏆 ${winner.name} is the winner` : `🤯 Nobody won`) + '\n'
+    )
   }
 
   public drawBoard(players: Player[], bullets: Bullet[], focusedPlayerId: PlayerId) {
@@ -80,6 +92,6 @@ export class ConsolePainter implements Painter {
     }
 
     process.stdout.write(this.horizontalEdge + '\n')
-    process.stdout.write('\nLife: ' + (focusedPlayer ? `${this.lifePointChar} `.repeat(focusedPlayer.lifePoints).trim() : ''))
+    process.stdout.write('\nLife: ' + (focusedPlayer ? `${this.lifePointChar} `.repeat(focusedPlayer.lifePoints).trim() : '') + '\n')
   }
 }
