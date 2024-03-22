@@ -1,6 +1,6 @@
 import readline from 'readline'
 import chalk, { Chalk } from 'chalk'
-import { Bullet, Player, Vector } from "../../common/model";
+import { Bullet, Player, PlayerId, Vector } from "../../common/model";
 import { Painter } from "./model";
 
 type DrawObject = {
@@ -35,22 +35,31 @@ export class ConsolePainter implements Painter {
   public initialize(boardWidth: number, boardHeight: number) {
     this.boardWidth = boardWidth
     this.boardHeight = boardHeight
-    this.drawAreaHeight = this.boardHeight + 4 // 2 horizontalEdges + 2 lines for life points
+    this.drawAreaHeight = this.boardHeight + 2 // 2 horizontalEdges
     this.drawAreaWidth = boardWidth + 2 // left & right edge
     this.horizontalEdge = '_'.repeat(this.drawAreaWidth)
   }
 
-  public clearBoard() {
-    readline.moveCursor(process.stdout, 0, -(this.drawAreaHeight))
+  public prepareForNewPaint() {
+    // clear life points and white space
     readline.clearLine(process.stdout, 0)
+    readline.moveCursor(process.stdout, 0, -1)
+    readline.clearLine(process.stdout, 0)
+    readline.moveCursor(process.stdout, 0, -1)
+
+    // does not need to clear the board as it has fixed size and will be repainted, just move cursor
+    readline.moveCursor(process.stdout, 0, -this.drawAreaHeight)
   }
 
-  public drawBoard(players: Player[], bullets: Bullet[], focusedPlayer: Player) {
+  public drawBoard(players: Player[], bullets: Bullet[], focusedPlayerId: PlayerId) {
+    const focusedPlayer = players.find(({ id }) => id === focusedPlayerId)
+
     const objects = [
       ...players.map(({ position }, index): DrawObject => ({ position, char: this.playerChar, color: this.playerColors[index] })),
       ...bullets.map(({ position }): DrawObject => ({ position, char: this.bulletChar }))
     ].sort(({ position: [ax, ay] }, { position: [bx, by]}) => ay === by ? ax - bx : ay - by)
 
+    process.stdout.write('\n')
     process.stdout.write(this.horizontalEdge + '\n')
 
     let objectIndex = 0
@@ -71,6 +80,6 @@ export class ConsolePainter implements Painter {
     }
 
     process.stdout.write(this.horizontalEdge + '\n')
-    process.stdout.write('\nLife: ' + '♥️ '.repeat(focusedPlayer.lifePoints).trim() + '\n')
+    process.stdout.write('\nLife: ' + (focusedPlayer ? `${this.lifePointChar} `.repeat(focusedPlayer.lifePoints).trim() : ''))
   }
 }

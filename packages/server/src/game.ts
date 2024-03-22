@@ -107,9 +107,13 @@ export class Game {
         bullet.position[1] += bullet.direction[1]
         return bullet
       })
-      .filter(({ position: [x, y] }) => x >= 0 && x < this.config.columns && y >= 0 && y < this.config.rows)
+      .filter(({ position }) => this.isOnBoard(position))
 
-    this.bullets = updatedBullets
+    const remainingBullets = this.players.reduce((bullets, player) => {
+      return this.applyBulletShoots(player, bullets)
+    }, updatedBullets)
+
+    this.bullets = remainingBullets
     this.sendUpdateBoard()
   }
 
@@ -126,25 +130,57 @@ export class Game {
     const collidesWithAnotherPlayer =
       this.players.some(({ id, position: [_x, _y] }) => _x === x && _y === y && id !== playerId)
 
-    const willStepOnBulletFromBack = 
-      this.bullets.some(({ position: [_x, _y], direction: [_dirX, _dirY] }) => (
-        _x === x &&
-        _y === y &&
-        _dirX === dirX &&
-        _dirY === dirY && (
-          (dirX === 1 && px < _x) ||
-          (dirX === -1 && px > _x )||
-          (dirY === 1 && py < _y) ||
-          (dirY === -1 && py > _y)
-        )
-      ))
+    const bulletSteppingOnFromBack = 
+      this.bullets.find(bullet => this.isSteppingOnBulletFromBack(player, bullet, [x, y]))
 
-    const canMoveOnDesiredPosition = !collidesWithAnotherPlayer && !willStepOnBulletFromBack
+    if(bulletSteppingOnFromBack) {
+      const shootingBulletsCandidates = this.bullets.filter(bullet => bullet !== bulletSteppingOnFromBack)
+      const remainingBullets = this.applyBulletShoots(player, shootingBulletsCandidates)
+      this.bullets = [...remainingBullets, bulletSteppingOnFromBack]
+    } else {
+      this.bullets = this.applyBulletShoots(player, this.bullets)
+    }
+
+    const canMoveOnDesiredPosition = !collidesWithAnotherPlayer && !bulletSteppingOnFromBack
 
     if(canMoveOnDesiredPosition) {
       player.position = [x, y]
       this.sendUpdateBoard()
     }
+  }
+
+  private applyBulletShoots(player: Player, bullets: Bullet[]): Bullet[] {
+    const { position: [px, py] } = player
+    return bullets.filter(bullet => {
+      const [bx, by] = bullet.position
+      if (bx === px && by === py) {
+        player.lifePoints = Math.max(0, player.lifePoints - 1)
+        console.log({ player })
+        return false
+      }
+      return true
+    })
+  }
+
+  private isSteppingOnBulletFromBack(player: Player, bullet: Bullet, desiredPlayerPosition: Vector) {
+    const [px, py] = player.position
+    const [bx, by] = bullet.position
+    const [x, y] = desiredPlayerPosition
+
+    const [pDirX, pDirY] = player.direction
+    const [bDirX, bDirY] = bullet.direction
+
+    return (
+      bx === x &&
+      by === y &&
+      bDirX === pDirX &&
+      bDirY === pDirY && (
+        (pDirX === 1 && px < bx) ||
+        (pDirX === -1 && px > bx )||
+        (pDirY === 1 && py < by) ||
+        (pDirY === -1 && py > by)
+      )
+    )
   }
 
   private fireBullet(playerId: PlayerId) {
@@ -165,6 +201,10 @@ export class Game {
     console.log('-- end game --')
     clearInterval(this.gameLoop!)
     this.gameState = GameState.Ended
+  }
+
+  private isOnBoard([x, y]: Vector) {
+    return x >= 0 && x < this.config.columns && y >= 0 && y < this.config.rows
   }
 
   private clampX(x: number) {

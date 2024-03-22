@@ -1,6 +1,6 @@
 import readline from 'readline'
 import { connect } from 'socket.io-client'
-import { Bullet, Player } from '../../common/model'
+import { Bullet, Player, PlayerId } from '../../common/model'
 import { ClientSocket } from './model'
 import { ConsolePainter } from './consolePainter'
 import { SocketEvent } from '../../common/events'
@@ -10,12 +10,12 @@ const SERVER_URL = 'http://localhost:3000'
 class Client {
   public readonly name: string
   private painter: ConsolePainter
-  private player: Player
+  private playerId: PlayerId
 
   constructor() {
     this.name = 'Adam'
     this.painter = new ConsolePainter()
-    this.player = { id: '', name: '', position: [0,0], direction: [0,1], lifePoints: 0 }
+    this.playerId = ''
   }
 
   public run() {
@@ -46,21 +46,22 @@ class Client {
   private registerStart(socket: ClientSocket) {
     socket.on(SocketEvent.Start, () => {
       console.log('Game started')
-      this.painter.drawBoard([], [], this.player)
+      this.painter.drawBoard([], [], this.playerId)
     })
   }
 
   private registerPlayerJoined(socket: ClientSocket) {
     socket.on(SocketEvent.PlayerJoined, ({ player, config }) => {
       this.painter.initialize(config.columns, config.rows)
-      this.player = player
+      // TODO: send only id
+      this.playerId = player.id
     })
   }
 
   private registerUpdateBoard(socket: ClientSocket) {
     socket.on(SocketEvent.UpdateBoard, (players: Player[], bullets: Bullet[]) => {
-      this.painter.clearBoard()
-      this.painter.drawBoard(players, bullets, this.player)
+      this.painter.prepareForNewPaint()
+      this.painter.drawBoard(players, bullets, this.playerId)
     })
   }
 
