@@ -210,10 +210,20 @@ export class Game {
   }
 
   private fireBullet(playerId: PlayerId) {
-    // TODO: check if can create (if not just created on the same field)
     const { position: [px, py], direction } = this.playersMap[playerId]
+    const newBulletPosition: Vector = [px + direction[0], py + direction[1]]
+
+    const isSimilarBulletJustFired = this.bullets.some(bullet => (
+      bullet.position[0] === newBulletPosition[0] &&
+      bullet.position[1] === newBulletPosition[1] &&
+      bullet.direction[0] === direction[0] &&
+      bullet.direction[1] === direction[1]
+    ))
+
+    if(isSimilarBulletJustFired) return;
+
     const bullet: Bullet = {
-      position: [px + direction[0], py + direction[1]],
+      position: newBulletPosition,
       direction
     }
     this.bullets.push(bullet)

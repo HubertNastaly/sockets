@@ -79,15 +79,15 @@ export class SocketCommander implements Commander {
 
   // methods used externally by Game
 
-  setOnJoinCallback(callback: typeof this.gameCallbacks['onJoin']) {
+  setOnJoinCallback(callback: typeof this.gameCallbacks.onJoin) {
     this.gameCallbacks.onJoin = callback
   }
 
-  setOnFireCallback(callback: typeof this.gameCallbacks['onFire']) {
+  setOnFireCallback(callback: typeof this.gameCallbacks.onFire) {
     this.gameCallbacks.onFire = callback
   }
 
-  setOnMoveCallback(callback: typeof this.gameCallbacks['onMove']) {
+  setOnMoveCallback(callback: typeof this.gameCallbacks.onMove) {
     this.gameCallbacks.onMove = callback
   }
 
