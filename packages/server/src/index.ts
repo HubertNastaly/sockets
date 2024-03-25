@@ -7,21 +7,28 @@ const HOST = 'localhost'
 
 class Server {
   private readonly httpServer: HttpServer
-  private readonly commander: SocketCommander
-  private readonly game: Game
 
   constructor() {
     this.httpServer = createServer()
-    this.commander = new SocketCommander(console)
-    this.game = new Game(console, this.commander)
   }
 
   public run() {
     this.httpServer.listen(PORT, HOST, undefined, () => {
       console.log(`Server running on port ${PORT}`)
+      this.createNewGameAndSocketConnection()
     })
-    this.game.initialize()
-    this.commander.initialize(this.httpServer)
+  }
+
+  private createNewGameAndSocketConnection() {
+    const commander = new SocketCommander(console)
+    this.createNewGame(commander)
+
+    commander.initialize(this.httpServer)
+  }
+
+  private createNewGame(commander: SocketCommander) {
+    const game = new Game(console, commander)
+    game.initialize(() => this.createNewGame(commander))
   }
 }
 

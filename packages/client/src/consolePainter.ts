@@ -61,6 +61,8 @@ export class ConsolePainter implements Painter {
     process.stdout.write(
       (winner ? `🏆 ${winner.name} is the winner` : `🤯 Nobody won`) + '\n'
     )
+
+    process.stdout.write('\nPress P to play again or any other key to disconnect\n')
   }
 
   public drawBoard(players: Player[], bullets: Bullet[], focusedPlayerId: PlayerId) {

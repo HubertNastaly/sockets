@@ -21,12 +21,13 @@ export class Game {
   private readonly commander: Commander
   private readonly logger: Logger
 
-  private gameState: GameState = GameState.Waiting
+  private gameState: GameState
   private playersMap: Record<PlayerId, Player>
   private livePlayers: Player[]
   private bullets: Bullet[]
 
   private gameLoop: NodeJS.Timeout | null
+  private onGameEnd: () => void
 
   constructor(logger: Logger, commander: Commander) {
     this.config = {
@@ -40,19 +41,29 @@ export class Game {
     this.bullets = []
     this.logger = logger
     this.commander = commander
+
+    this.gameState = GameState.Waiting
     this.gameLoop = null
+    this.onGameEnd = () => null
   }
 
-  public initialize() {
+  public initialize(onGameEnd: () => void) {
     this.commander.setOnJoinCallback(this.addPlayer.bind(this))
     this.commander.setOnFireCallback(this.fireBullet.bind(this))
     this.commander.setOnMoveCallback(this.movePlayer.bind(this))
+    this.onGameEnd = onGameEnd
   }
 
   private addPlayer(id: string, name: string) {
     if(this.playersMap[id]) {
       throw new Error(`Player with id ${id} already exists`)
     }
+
+    if(this.gameState !== GameState.Waiting) {
+      // TODO: send reject response
+      return
+    }
+
     const player: Player = {
       id,
       name,
@@ -157,7 +168,7 @@ export class Game {
     const remainingBullets = bullets.filter(bullet => {
       const [bx, by] = bullet.position
       if (bx === px && by === py) {
-        this.hurtPlayer(player)
+        this.shootPlayer(player)
         return false
       }
       return true
@@ -170,7 +181,7 @@ export class Game {
     return remainingBullets
   }
 
-  private hurtPlayer(player: Player) {
+  private shootPlayer(player: Player) {
     player.lifePoints--
     if(player.lifePoints === 0) {
       this.livePlayers = this.livePlayers.filter(({ id }) => id !== player.id)
@@ -225,6 +236,8 @@ export class Game {
 
     const winner = this.livePlayers.length > 0 ? this.livePlayers.at(0) : undefined
     this.commander.sendGameEnded(winner)
+
+    this.onGameEnd()
   }
 
   private isOnBoard([x, y]: Vector) {

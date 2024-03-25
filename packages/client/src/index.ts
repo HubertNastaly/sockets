@@ -1,6 +1,6 @@
 import readline from 'readline'
 import { connect } from 'socket.io-client'
-import { Bullet, Player, PlayerId } from '../../common/model'
+import { Bullet, Player, PlayerDirection, PlayerId } from '../../common/model'
 import { ClientSocket } from './model'
 import { ConsolePainter } from './consolePainter'
 import { SocketEvent } from '../../common/events'
@@ -8,95 +8,117 @@ import { SocketEvent } from '../../common/events'
 const SERVER_URL = 'http://localhost:3000'
 
 class Client {
+  private socket: ClientSocket
   public readonly name: string
   private painter: ConsolePainter
   private playerId: PlayerId
+  private gameEnded: boolean
 
   constructor() {
     this.name = 'Adam'
     this.painter = new ConsolePainter()
     this.playerId = ''
+    this.gameEnded = false
+    this.socket = {} as ClientSocket
   }
 
   public run() {
-    const socket: ClientSocket = connect(SERVER_URL, {
+    this.socket = connect(SERVER_URL, {
       transports: ['websocket', 'polling']
     })
 
-    this.registerConnectionEstablished(socket)
-    this.registerPlayerJoined(socket)
-    this.registerStart(socket)
-    this.registerUpdateBoard(socket)
-    this.registerGameEnded(socket)
-    this.registerKeyPress(socket)
+    this.registerConnectionEstablished()
+    this.registerPlayerJoined()
+    this.registerStart()
+    this.registerUpdateBoard()
+    this.registerGameEnded()
+    this.registerKeyPress()
 
-    socket.on('connect', () => {
+    this.socket.on('connect', () => {
       console.log('Client socket connection established')
-      this.joinGame(socket)
+      this.joinGame()
     })
   
-    socket.on('connect_error', (error) => {
+    this.socket.on('connect_error', (error) => {
       console.log({ error })
     })
   }
 
-  private joinGame(socket: ClientSocket) {
-    socket.emit(SocketEvent.Join, { name: this.name })
+  private joinGame() {
+    this.socket.emit(SocketEvent.Join, { name: this.name })
   }
 
-  private registerStart(socket: ClientSocket) {
-    socket.on(SocketEvent.Start, () => {
+  private move(direction: PlayerDirection) {
+    this.socket.emit(SocketEvent.Move, { direction })
+  }
+
+  private fire() {
+    this.socket.emit(SocketEvent.Fire)
+  }
+
+  private registerStart() {
+    this.socket.on(SocketEvent.Start, () => {
       console.log('Game started')
       this.painter.drawBoard([], [], this.playerId)
     })
   }
 
-  private registerPlayerJoined(socket: ClientSocket) {
-    socket.on(SocketEvent.PlayerJoined, ({ player, config }) => {
+  private registerPlayerJoined() {
+    this.socket.on(SocketEvent.PlayerJoined, ({ player, config }) => {
       this.painter.initialize(config.columns, config.rows)
       // TODO: send only id
       this.playerId = player.id
     })
   }
 
-  private registerUpdateBoard(socket: ClientSocket) {
-    socket.on(SocketEvent.UpdateBoard, (players: Player[], bullets: Bullet[]) => {
+  private registerUpdateBoard() {
+    this.socket.on(SocketEvent.UpdateBoard, (players: Player[], bullets: Bullet[]) => {
       this.painter.prepareForNewPaint()
       this.painter.drawBoard(players, bullets, this.playerId)
     })
   }
 
-  private registerConnectionEstablished(socket: ClientSocket) {
-    socket.on(SocketEvent.ConnectionEstablished, (persistentSocketId) => {
-      socket.auth = { persistentSocketId }
+  private registerConnectionEstablished() {
+    this.socket.on(SocketEvent.ConnectionEstablished, (persistentSocketId) => {
+      this.socket.auth = { persistentSocketId }
     })
   }
 
-  private registerGameEnded(socket: ClientSocket) {
-    socket.on(SocketEvent.GameEnded, (winner?: Player) => {
+  private registerGameEnded() {
+    this.socket.on(SocketEvent.GameEnded, (winner?: Player) => {
+      this.gameEnded = true
       this.painter.clearBoard()
       this.painter.drawGameEnded(winner)
     })
   }
 
-  private registerKeyPress(socket: ClientSocket) {
+  private registerKeyPress() {
     readline.emitKeypressEvents(process.stdin)
     process.stdin.on('keypress', (_, key) => {
+      if(this.gameEnded) {
+        if(key.name === 'p') {
+          this.gameEnded = false
+          this.joinGame()
+        } else {
+          process.exit()
+        }
+      }
+
       switch(key.name) {
         case 'up':
-          socket.emit(SocketEvent.Move, { direction: 'up' })
+          this.move('up')
           return
         case 'right':
-          socket.emit(SocketEvent.Move, { direction: 'right' })
+          this.move('right')
           return
         case 'down':
-          socket.emit(SocketEvent.Move, { direction: 'down' })
+          this.move('down')
           return
         case 'left':
-          socket.emit(SocketEvent.Move, { direction: 'left' })
+          this.move('left')
           return
         case 'space':
-          socket.emit(SocketEvent.Fire)
+          this.fire()
           return
         case 'x':
           process.exit()
