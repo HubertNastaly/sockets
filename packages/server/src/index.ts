@@ -1,3 +1,4 @@
+import express from 'express'
 import { createServer, Server as HttpServer } from 'http'
 import { Game } from './game'
 import { SocketCommander } from './socketCommander'
@@ -11,7 +12,11 @@ class Server {
   private readonly logger: ConsoleLogger
 
   constructor() {
-    this.httpServer = createServer()
+    const app = express()
+    app.get('/health', (_, res) => {
+      res.status(200).send('Running')
+    })
+    this.httpServer = createServer(app)
     this.logger = new ConsoleLogger()
   }
 
