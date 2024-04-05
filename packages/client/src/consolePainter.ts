@@ -56,11 +56,13 @@ export class ConsolePainter implements Painter {
   }
 
   public drawGameEnded(winner?: Player) {
-    this.printLine()
-    this.printLine('* * * GAME ENDED * * *')
-    this.printLine(winner ? `🏆 ${winner.name} is the winner` : `🤯 Nobody won`)
-    this.printLine()
-    this.printLine('Press P to play again or any other key to disconnect')
+    this.printLines(
+      '',
+      '* * * GAME ENDED * * *',
+      winner ? `🏆 ${winner.name} is the winner` : `🤯 Nobody won`,
+      '',
+      'Press P to play again or any other key to disconnect'
+    )
   }
 
   public drawBoard(players: Player[], bullets: Bullet[], focusedPlayerId: PlayerId) {
@@ -71,8 +73,10 @@ export class ConsolePainter implements Painter {
       ...bullets.map(({ position }): DrawObject => ({ position, char: this.bulletChar }))
     ].sort(({ position: [ax, ay] }, { position: [bx, by]}) => ay === by ? ax - bx : ay - by)
 
-    this.printLine()
-    this.printLine(this.horizontalEdge)
+    this.printLines(
+      '',
+      this.horizontalEdge
+    )
 
     let objectIndex = 0
     for(let rowIndex=0; rowIndex<this.boardHeight; rowIndex++) {
@@ -86,21 +90,27 @@ export class ConsolePainter implements Painter {
         this.print(color ? color(char) : char)
         printedChars += emptyChars + 1
         objectIndex++
-      } 
-      this.print(this.emptyFieldChar.repeat(this.boardWidth - printedChars))
-      this.print('|\n')
+      }
+      this.print(this.emptyFieldChar.repeat(this.boardWidth - printedChars) + '|\n')
     }
 
-    this.printLine(this.horizontalEdge)
-    this.printLine()
-    this.printLine('Life: ' + (focusedPlayer ? `${this.lifePointChar} `.repeat(focusedPlayer.lifePoints).trim() : ''))
+    this.printLines(
+      this.horizontalEdge,
+      '',
+      'Life: ' + (focusedPlayer ? `${this.lifePointChar} `.repeat(focusedPlayer.lifePoints).trim() : '')
+    )
   }
 
-  private printLine(line = '') {
-    this.print(line + '\n')
+  private printLines(...lines: string[]) {
+    const concatenated = lines.join('\n').concat('\n')
+    this.print(concatenated)
   }
 
   private print(text: string) {
-    process.stdout.write(text)
+    if(!process.stdout.write(text)) {
+      process.stdout.once('drain', () => {
+        this.print(text)
+      })
+    }
   }
 }
