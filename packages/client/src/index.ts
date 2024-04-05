@@ -1,14 +1,16 @@
 import readline from 'readline'
 import path from 'path'
 import { connect } from 'socket.io-client'
-import { Bullet, Player, PlayerDirection, PlayerId } from '../../common/model'
+import { PlayerDirection, PlayerId } from '../../common/model'
 import { ClientSocket } from './model'
 import { ConsolePainter } from './consolePainter'
 import { SocketEvent } from '../../common/events'
 import { FileLogger } from '../../common/fileLogger'
 import { Benchmark } from '../../common/benchmark'
 
-const SERVER_URL = 'http://localhost:3000'
+const SERVER_PORT = 3000
+const SERVER_URL = 'https://sockets-6ktx.onrender.com'
+// const SERVER_URL = 'http://0.0.0.0:3000'
 
 const getFileName = (id: string) => path.join('logs', `${id}.txt`)
 
@@ -46,7 +48,8 @@ class Client {
 
   private setupSocket() {
     const socket = connect(SERVER_URL, {
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      port: SERVER_PORT
     })
 
     socket.on('connect', () => {

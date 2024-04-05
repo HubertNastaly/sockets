@@ -54,12 +54,19 @@ export class Game {
     this.onGameEnd = onGameEnd
   }
 
+  public terminate() {
+    if(this.gameState !== GameState.Started) {
+      throw new Error('Cannot terminate game which is not started')
+    }
+    clearInterval(this.gameLoop!)
+  }
+
   private addPlayer(id: string, name: string) {
-    if(this.playersMap[id]) {
+    if (this.playersMap[id]) {
       throw new Error(`Player with id ${id} already exists`)
     }
 
-    if(this.gameState !== GameState.Waiting) {
+    if (this.gameState !== GameState.Waiting) {
       // TODO: send reject response
       return
     }
@@ -76,8 +83,8 @@ export class Game {
     this.logger.log(`Player ${name} (id: ${id}) joined`)
 
     this.commander.sendPlayerJoined(this.playersMap[id], this.config)
-    
-    if(this.livePlayers.length === this.config.playersNumber) {
+
+    if (this.livePlayers.length === this.config.playersNumber) {
       this.start()
     }
   }
@@ -113,9 +120,8 @@ export class Game {
 
   private updateBoard() {
     const updatedBullets = this.moveBullets()
-    const remainingBullets = this.livePlayers.reduce((bullets, player) => {
-      return this.applyBulletShoots(player, bullets)
-    }, updatedBullets)
+    const remainingBullets = this.livePlayers.reduce((bullets, player) =>
+      this.applyBulletShoots(player, bullets), updatedBullets)
 
     this.bullets = remainingBullets
   }
@@ -134,7 +140,7 @@ export class Game {
     const direction = DIRECTIONS_MAP[playerDirection]
     const player = this.playersMap[playerId]
     player.direction = direction
-    
+
     const [dirX, dirY] = direction
     const [px, py] = player.position
     const x = this.clampX(px + dirX)
@@ -143,10 +149,10 @@ export class Game {
     const collidesWithAnotherPlayer =
       this.livePlayers.some(({ id, position: [_x, _y] }) => _x === x && _y === y && id !== playerId)
 
-    const bulletSteppingOnFromBack = 
+    const bulletSteppingOnFromBack =
       this.bullets.find(bullet => this.isSteppingOnBulletFromBack(player, bullet, [x, y]))
 
-    if(bulletSteppingOnFromBack) {
+    if (bulletSteppingOnFromBack) {
       const shootingBulletsCandidates = this.bullets.filter(bullet => bullet !== bulletSteppingOnFromBack)
       const remainingBullets = this.applyBulletShoots(player, shootingBulletsCandidates)
       this.bullets = [...remainingBullets, bulletSteppingOnFromBack]
@@ -156,7 +162,7 @@ export class Game {
 
     const canMoveOnDesiredPosition = !collidesWithAnotherPlayer && !bulletSteppingOnFromBack
 
-    if(canMoveOnDesiredPosition) {
+    if (canMoveOnDesiredPosition) {
       player.position = [x, y]
       this.sendUpdateBoard('move')
     }
@@ -173,7 +179,7 @@ export class Game {
       return true
     })
 
-    if(this.livePlayers.length < 2) {
+    if (this.livePlayers.length < 2) {
       this.end()
     }
 
@@ -182,7 +188,7 @@ export class Game {
 
   private shootPlayer(player: Player) {
     player.lifePoints--
-    if(player.lifePoints === 0) {
+    if (player.lifePoints === 0) {
       this.livePlayers = this.livePlayers.filter(({ id }) => id !== player.id)
     }
   }
@@ -201,7 +207,7 @@ export class Game {
       bDirX === pDirX &&
       bDirY === pDirY && (
         (pDirX === 1 && px < bx) ||
-        (pDirX === -1 && px > bx )||
+        (pDirX === -1 && px > bx) ||
         (pDirY === 1 && py < by) ||
         (pDirY === -1 && py > by)
       )
@@ -219,7 +225,7 @@ export class Game {
       bullet.direction[1] === direction[1]
     ))
 
-    if(isSimilarBulletJustFired) return;
+    if (isSimilarBulletJustFired) return;
 
     const bullet: Bullet = {
       position: newBulletPosition,
@@ -230,13 +236,13 @@ export class Game {
   }
 
   private sendUpdateBoard(reason: string) {
-    if(this.gameState === GameState.Started) {
+    if (this.gameState === GameState.Started) {
       this.commander.sendUpdateBoard(this.livePlayers, this.bullets, reason)
     }
   }
 
   private end() {
-    if(this.gameState !== GameState.Started) return;
+    if (this.gameState !== GameState.Started) return;
 
     this.logger.log('-- Game Ended --')
 

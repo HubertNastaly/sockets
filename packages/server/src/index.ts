@@ -10,6 +10,7 @@ const HOST = '0.0.0.0'
 class Server {
   private readonly httpServer: HttpServer
   private readonly logger: ConsoleLogger
+  private game: Game | undefined
 
   constructor() {
     const app = express()
@@ -31,12 +32,15 @@ class Server {
     const commander = new SocketCommander(this.logger)
     this.createNewGame(commander)
 
-    commander.initialize(this.httpServer)
+    commander.initialize(this.httpServer, () => {
+      this.game?.terminate()
+      this.createNewGame(commander)
+    })
   }
 
   private createNewGame(commander: SocketCommander) {
-    const game = new Game(this.logger, commander)
-    game.initialize(() => this.createNewGame(commander))
+    this.game = new Game(this.logger, commander)
+    this.game.initialize(() => this.createNewGame(commander))
   }
 }
 

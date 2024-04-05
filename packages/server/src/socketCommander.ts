@@ -27,7 +27,7 @@ export class SocketCommander implements Commander {
     }
   }
 
-  public initialize(httpServer: HttpServer) {
+  public initialize(httpServer: HttpServer, onAllClientsDisconnected: () => void) {
     this.io.on('connection', (socket) => {
       if(!socket.recovered) {
         this.logger.log(`Socket connection established for socket: ${socket.id}`, { socket })
@@ -47,6 +47,12 @@ export class SocketCommander implements Commander {
         }
         this.persistentSocketIdToSocket[persistentSocketId] = socket
       }
+
+      socket.on('disconnect', () => {
+        if(this.io.engine.clientsCount === 0) {
+          onAllClientsDisconnected()
+        }
+      })
 
       this.registerOnFire(socket)
       this.registerOnMove(socket)
