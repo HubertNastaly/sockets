@@ -82,7 +82,7 @@ export class Game {
     this.livePlayers.push(player)
     this.logger.log(`Player ${name} (id: ${id}) joined`)
 
-    this.commander.sendPlayerJoined(this.playersMap[id], this.config)
+    this.commander.sendPlayerJoined(this.playersMap[id], this.livePlayers.length, this.config)
 
     if (this.livePlayers.length === this.config.playersNumber) {
       this.start()

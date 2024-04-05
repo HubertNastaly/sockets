@@ -93,7 +93,8 @@ class Client {
   }
 
   private registerPlayerJoined() {
-    this.socket.on(SocketEvent.PlayerJoined, ({ player, config }) => {
+    this.socket.on(SocketEvent.PlayerJoined, ({ player, config, playerCount }) => {
+      console.log(`Joined (${playerCount}/${config.playersNumber})`)
       this.painter.initialize(config.columns, config.rows)
       // TODO: send only id
       this.playerId = player.id

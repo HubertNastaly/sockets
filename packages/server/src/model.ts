@@ -8,7 +8,7 @@ export interface Commander {
   setOnMoveCallback(callback: (playerId: PlayerId, direction: PlayerDirection) => void): void;
   sendGameStarted(): void;
   sendGameEnded(winner?: Player): void;
-  sendPlayerJoined(player: Player, config: GameConfig): void;
+  sendPlayerJoined(player: Player, playerCount: number, config: GameConfig): void;
   sendUpdateBoard(players: Player[], bullets: Bullet[], reason: string): void;
 }
 

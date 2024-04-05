@@ -15,6 +15,7 @@ export interface ServerEmittedEventsMap {
   [SocketEvent.Start]: () => void
   [SocketEvent.PlayerJoined]: (payload: {
     player: Player
+    playerCount: number
     config: GameConfig
   }) => void
   [SocketEvent.UpdateBoard]: (players: Player[], bullets: Bullet[], reason: string) => void

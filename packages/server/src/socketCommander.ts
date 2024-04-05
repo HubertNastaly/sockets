@@ -105,9 +105,9 @@ export class SocketCommander implements Commander {
     this.io.emit(SocketEvent.GameEnded, winner)
   }
 
-  sendPlayerJoined(player: Player, config: GameConfig) {
+  sendPlayerJoined(player: Player, playerCount: number, config: GameConfig) {
     const { sockets } = this.io.sockets
-    sockets.get(player.id)?.emit(SocketEvent.PlayerJoined, { player, config })
+    sockets.get(player.id)?.emit(SocketEvent.PlayerJoined, { player, config, playerCount })
   }
 
   sendUpdateBoard(players: Player[], bullets: Bullet[], reason: string) {
