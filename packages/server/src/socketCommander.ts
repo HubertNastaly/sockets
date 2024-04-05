@@ -60,7 +60,7 @@ export class SocketCommander implements Commander {
   }
 
   private registerOnJoin(socket: Socket) {
-    socket.on(SocketEvent.Join, ({ name }) => {
+    socket.on(SocketEvent.Join, (name) => {
       this.gameCallbacks.onJoin(socket.id, name)
     })
   }
@@ -72,7 +72,7 @@ export class SocketCommander implements Commander {
   }
 
   private registerOnMove(socket: Socket) {
-    socket.on(SocketEvent.Move, ({ direction }) => {
+    socket.on(SocketEvent.Move, (direction) => {
       this.gameCallbacks.onMove(socket.id, direction)
     })
   }
@@ -101,7 +101,7 @@ export class SocketCommander implements Commander {
 
   sendPlayerJoined(player: Player, config: GameConfig) {
     const { sockets } = this.io.sockets
-    sockets.get(player.id)?.emit(SocketEvent.PlayerJoined, { player, config })
+    sockets.get(player.id)?.emit(SocketEvent.PlayerJoined, player, config)
   }
 
   sendUpdateBoard(players: Player[], bullets: Bullet[], reason: string) {

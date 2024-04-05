@@ -69,11 +69,11 @@ class Client {
   }
 
   private joinGame() {
-    this.socket.emit(SocketEvent.Join, { name: this.name })
+    this.socket.emit(SocketEvent.Join, this.name)
   }
 
   private move(direction: PlayerDirection) {
-    this.socket.emit(SocketEvent.Move, { direction })
+    this.socket.emit(SocketEvent.Move, direction)
   }
 
   private fire() {
@@ -90,7 +90,7 @@ class Client {
   }
 
   private registerPlayerJoined() {
-    this.socket.on(SocketEvent.PlayerJoined, ({ player, config }) => {
+    this.socket.on(SocketEvent.PlayerJoined, (player, config) => {
       this.painter.initialize(config.columns, config.rows)
       // TODO: send only id
       this.playerId = player.id

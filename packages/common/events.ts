@@ -13,17 +13,14 @@ export enum SocketEvent {
 
 export interface ServerEmittedEventsMap {
   [SocketEvent.Start]: () => void
-  [SocketEvent.PlayerJoined]: (payload: {
-    player: Player
-    config: GameConfig
-  }) => void
+  [SocketEvent.PlayerJoined]: (player: Player, config: GameConfig) => void
   [SocketEvent.UpdateBoard]: (players: Player[], bullets: Bullet[], reason: string) => void
   [SocketEvent.ConnectionEstablished]: (persistentSocketId: string) => void
   [SocketEvent.GameEnded]: (winner?: Player) => void
 }
 
 export interface ClientEmittedEventsMap {
-  [SocketEvent.Join]: (payload: { name: string }) => void
+  [SocketEvent.Join]: (name: string) => void
   [SocketEvent.Fire]: () => void
-  [SocketEvent.Move]: (payload: { direction: PlayerDirection }) => void
+  [SocketEvent.Move]: (direction: PlayerDirection) => void
 }
