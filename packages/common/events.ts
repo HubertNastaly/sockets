@@ -17,8 +17,7 @@ export interface ServerEmittedEventsMap {
     player: Player
     config: GameConfig
   }) => void
-  // scheduled means if it's the update from the standard game loop (maybe it's even better to pass exact type instead of boolean)
-  [SocketEvent.UpdateBoard]: (players: Player[], bullets: Bullet[], scheduled: boolean) => void
+  [SocketEvent.UpdateBoard]: (players: Player[], bullets: Bullet[], reason: string) => void
   [SocketEvent.ConnectionEstablished]: (persistentSocketId: string) => void
   [SocketEvent.GameEnded]: (winner?: Player) => void
 }

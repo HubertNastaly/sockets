@@ -1,5 +1,5 @@
 import io from 'socket.io';
-import { Commander, Logger, SocketServer, Socket } from './model'
+import { Commander, SocketServer, Socket } from './model'
 import { Server as HttpServer} from 'http'
 import { Bullet, GameConfig, Logger, Player, PlayerDirection, PlayerId } from '../../common/model';
 import { ClientEmittedEventsMap, ServerEmittedEventsMap, SocketEvent } from '../../common/events';
@@ -104,8 +104,8 @@ export class SocketCommander implements Commander {
     sockets.get(player.id)?.emit(SocketEvent.PlayerJoined, { player, config })
   }
 
-  sendUpdateBoard(players: Player[], bullets: Bullet[]) {
-    this.io.emit(SocketEvent.UpdateBoard, players, bullets)
+  sendUpdateBoard(players: Player[], bullets: Bullet[], reason: string) {
+    this.io.emit(SocketEvent.UpdateBoard, players, bullets, reason)
   }
 
   private notImplemented(detail: string) {

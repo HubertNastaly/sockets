@@ -107,7 +107,7 @@ export class Game {
 
     this.gameLoop = setInterval(() => {
       this.updateBoard()
-      this.sendUpdateBoard(true)
+      this.sendUpdateBoard('loop')
     }, FRAME_INTERVAL)
   }
 
@@ -158,7 +158,7 @@ export class Game {
 
     if(canMoveOnDesiredPosition) {
       player.position = [x, y]
-      this.sendUpdateBoard(false)
+      this.sendUpdateBoard('move')
     }
   }
 
@@ -226,12 +226,12 @@ export class Game {
       direction
     }
     this.bullets.push(bullet)
-    this.sendUpdateBoard(false)
+    this.sendUpdateBoard('fire')
   }
 
-  private sendUpdateBoard(scheduled: boolean) {
+  private sendUpdateBoard(reason: string) {
     if(this.gameState === GameState.Started) {
-      this.commander.sendUpdateBoard(this.livePlayers, this.bullets, scheduled)
+      this.commander.sendUpdateBoard(this.livePlayers, this.bullets, reason)
     }
   }
 

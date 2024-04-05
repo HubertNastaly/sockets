@@ -98,8 +98,8 @@ class Client {
   }
 
   private registerUpdateBoard() {
-    this.socket.on(SocketEvent.UpdateBoard, (players: Player[], bullets: Bullet[], scheduled) => {
-      if(!scheduled) {
+    this.socket.on(SocketEvent.UpdateBoard, (players: Player[], bullets: Bullet[], reason) => {
+      if(reason === 'fire') {
         this.logger.log('Update board')
         this.benchmark.stop('fire')
       }
@@ -107,7 +107,7 @@ class Client {
       this.painter.prepareForNewPaint()
       this.painter.drawBoard(players, bullets, this.playerId)
 
-      if(!scheduled) {
+      if(reason === 'fire') {
         this.logger.log('Board repainted')
       }
     })
