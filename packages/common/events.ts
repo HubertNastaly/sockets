@@ -1,4 +1,4 @@
-import { Bullet, GameConfig, Player, PlayerDirection } from "./model"
+import { Bullet, EncodedBullets, EncodedPlayers, GameConfig, Player, PlayerDirection } from "./model"
 
 export enum SocketEvent {
   Join = 'join',
@@ -14,7 +14,7 @@ export enum SocketEvent {
 export interface ServerEmittedEventsMap {
   [SocketEvent.Start]: () => void
   [SocketEvent.PlayerJoined]: (player: Player, config: GameConfig) => void
-  [SocketEvent.UpdateBoard]: (players: Player[], bullets: Bullet[], reason: string) => void
+  [SocketEvent.UpdateBoard]: (players: EncodedPlayers, bullets: EncodedBullets, reason: string) => void
   [SocketEvent.ConnectionEstablished]: (persistentSocketId: string) => void
   [SocketEvent.GameEnded]: (winner?: Player) => void
 }

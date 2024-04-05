@@ -7,6 +7,7 @@ import { ConsolePainter } from './consolePainter'
 import { SocketEvent } from '../../common/events'
 import { FileLogger } from '../../common/fileLogger'
 import { Benchmark } from '../../common/benchmark'
+import { decodeBullets, decodePlayers } from '../../common/coders'
 
 const SERVER_URL = 'http://localhost:3000'
 
@@ -98,7 +99,7 @@ class Client {
   }
 
   private registerUpdateBoard() {
-    this.socket.on(SocketEvent.UpdateBoard, (players, bullets, reason) => {
+    this.socket.on(SocketEvent.UpdateBoard, (encodedPlayers, encodedBullets, reason) => {
       if(reason === 'fire') {
         this.benchmark.stop('fire')
         this.logger.log('Update board')
@@ -106,6 +107,8 @@ class Client {
       }
 
       this.painter.prepareForNewPaint()
+      const players = decodePlayers(encodedPlayers)
+      const bullets = decodeBullets(encodedBullets)
       this.painter.drawBoard(players, bullets, this.playerId)
 
       if(reason === 'fire') {
@@ -145,16 +148,16 @@ class Client {
 
       switch(key.name) {
         case 'up':
-          this.move('up')
+          this.move(PlayerDirection.up)
           return
         case 'right':
-          this.move('right')
+          this.move(PlayerDirection.right)
           return
         case 'down':
-          this.move('down')
+          this.move(PlayerDirection.down)
           return
         case 'left':
-          this.move('left')
+          this.move(PlayerDirection.left)
           return
         case 'space':
           this.fire()

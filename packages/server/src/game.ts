@@ -1,4 +1,4 @@
-import { Bullet, Direction, GameConfig, Logger, Player, PlayerDirection, PlayerId, Vector } from "../../common/model"
+import { Bullet, DIRECTIONS_MAP, Direction, GameConfig, Logger, Player, PlayerDirection, PlayerId, Vector } from "../../common/model"
 import { Commander } from "./model"
 
 enum GameState {
@@ -8,13 +8,6 @@ enum GameState {
 }
 
 const FRAME_INTERVAL = 50 //ms
-
-const DIRECTIONS_MAP: Record<PlayerDirection, Direction> = {
-  'down': [0, 1],
-  'left': [-1, 0],
-  'right': [1, 0],
-  'up': [0, -1]
-}
 
 export class Game {
   private readonly config: GameConfig

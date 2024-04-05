@@ -3,6 +3,7 @@ import { Commander, SocketServer, Socket } from './model'
 import { Server as HttpServer} from 'http'
 import { Bullet, GameConfig, Logger, Player, PlayerDirection, PlayerId } from '../../common/model';
 import { ClientEmittedEventsMap, ServerEmittedEventsMap, SocketEvent } from '../../common/events';
+import { encodeBullets, encodePlayers } from '../../common/coders';
 
 export class SocketCommander implements Commander {
   private readonly io: SocketServer
@@ -105,7 +106,7 @@ export class SocketCommander implements Commander {
   }
 
   sendUpdateBoard(players: Player[], bullets: Bullet[], reason: string) {
-    this.io.emit(SocketEvent.UpdateBoard, players, bullets, reason)
+    this.io.emit(SocketEvent.UpdateBoard, encodePlayers(players), encodeBullets(bullets), reason)
   }
 
   private notImplemented(detail: string) {
