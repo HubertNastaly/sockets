@@ -56,13 +56,11 @@ export class ConsolePainter implements Painter {
   }
 
   public drawGameEnded(winner?: Player) {
-    process.stdout.write('\n')
-    process.stdout.write('* * * GAME ENDED * * *\n')
-    process.stdout.write(
-      (winner ? `🏆 ${winner.name} is the winner` : `🤯 Nobody won`) + '\n'
-    )
-
-    process.stdout.write('\nPress P to play again or any other key to disconnect\n')
+    this.printLine()
+    this.printLine('* * * GAME ENDED * * *')
+    this.printLine(winner ? `🏆 ${winner.name} is the winner` : `🤯 Nobody won`)
+    this.printLine()
+    this.printLine('Press P to play again or any other key to disconnect')
   }
 
   public drawBoard(players: Player[], bullets: Bullet[], focusedPlayerId: PlayerId) {
@@ -73,27 +71,36 @@ export class ConsolePainter implements Painter {
       ...bullets.map(({ position }): DrawObject => ({ position, char: this.bulletChar }))
     ].sort(({ position: [ax, ay] }, { position: [bx, by]}) => ay === by ? ax - bx : ay - by)
 
-    process.stdout.write('\n')
-    process.stdout.write(this.horizontalEdge + '\n')
+    this.printLine()
+    this.printLine(this.horizontalEdge)
 
     let objectIndex = 0
     for(let rowIndex=0; rowIndex<this.boardHeight; rowIndex++) {
-      process.stdout.write(this.verticalEdgeChar)
+      this.print(this.verticalEdgeChar)
       let printedChars = 0
 
       while(objectIndex < objects.length && objects[objectIndex].position[1] === rowIndex) {
         const { position, char, color } = objects[objectIndex]
         const emptyChars = position[0] - printedChars
-        process.stdout.write(this.emptyFieldChar.repeat(emptyChars))
-        process.stdout.write(color ? color(char) : char)
+        this.print(this.emptyFieldChar.repeat(emptyChars))
+        this.print(color ? color(char) : char)
         printedChars += emptyChars + 1
         objectIndex++
       } 
-      process.stdout.write(this.emptyFieldChar.repeat(this.boardWidth - printedChars))
-      process.stdout.write('|\n')
+      this.print(this.emptyFieldChar.repeat(this.boardWidth - printedChars))
+      this.print('|\n')
     }
 
-    process.stdout.write(this.horizontalEdge + '\n')
-    process.stdout.write('\nLife: ' + (focusedPlayer ? `${this.lifePointChar} `.repeat(focusedPlayer.lifePoints).trim() : '') + '\n')
+    this.printLine(this.horizontalEdge)
+    this.printLine()
+    this.printLine('Life: ' + (focusedPlayer ? `${this.lifePointChar} `.repeat(focusedPlayer.lifePoints).trim() : ''))
+  }
+
+  private printLine(line = '') {
+    this.print(line + '\n')
+  }
+
+  private print(text: string) {
+    process.stdout.write(text)
   }
 }
