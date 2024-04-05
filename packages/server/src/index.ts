@@ -4,7 +4,7 @@ import { SocketCommander } from './socketCommander'
 import { ConsoleLogger } from '../../common/consoleLogger'
 
 const PORT = 3000
-const HOST = 'localhost'
+const HOST = '0.0.0.0'
 
 class Server {
   private readonly httpServer: HttpServer
