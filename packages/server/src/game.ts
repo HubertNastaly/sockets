@@ -26,6 +26,7 @@ export class Game {
   private livePlayers: Player[]
   private bullets: Bullet[]
 
+  private startTimeMs: number
   private gameLoop: NodeJS.Timeout | null
   private onGameEnd: () => void
 
@@ -34,7 +35,8 @@ export class Game {
       columns: 30,
       rows: 30,
       playersNumber: 2,
-      initialLifePoints: 3
+      initialLifePoints: 3,
+      timeoutSec: 90
     }
     this.playersMap = {}
     this.livePlayers = []
@@ -45,6 +47,7 @@ export class Game {
     this.gameState = GameState.Waiting
     this.gameLoop = null
     this.onGameEnd = () => null
+    this.startTimeMs = 0
   }
 
   public initialize(onGameEnd: () => void) {
@@ -55,10 +58,9 @@ export class Game {
   }
 
   public terminate() {
-    if(this.gameState !== GameState.Started) {
-      throw new Error('Cannot terminate game which is not started')
+    if (this.gameState === GameState.Started) {
+      clearInterval(this.gameLoop!)
     }
-    clearInterval(this.gameLoop!)
   }
 
   private addPlayer(id: string, name: string) {
@@ -112,6 +114,8 @@ export class Game {
     this.logger.log('Game started')
     this.commander.sendGameStarted()
 
+    this.startTimeMs = Date.now()
+
     this.gameLoop = setInterval(() => {
       this.updateBoard()
       this.sendUpdateBoard('loop')
@@ -119,6 +123,9 @@ export class Game {
   }
 
   private updateBoard() {
+    if(this.getTimeLeftSec() === 0) {
+      this.end()
+    }
     const updatedBullets = this.moveBullets()
     const remainingBullets = this.livePlayers.reduce((bullets, player) =>
       this.applyBulletShoots(player, bullets), updatedBullets)
@@ -236,9 +243,8 @@ export class Game {
   }
 
   private sendUpdateBoard(reason: string) {
-    if (this.gameState === GameState.Started) {
-      this.commander.sendUpdateBoard(this.livePlayers, this.bullets, reason)
-    }
+    if (this.gameState !== GameState.Started) return;
+    this.commander.sendUpdateBoard(this.livePlayers, this.bullets, this.getTimeLeftSec(), reason)
   }
 
   private end() {
@@ -249,10 +255,14 @@ export class Game {
     clearInterval(this.gameLoop!)
     this.gameState = GameState.Ended
 
-    const winner = this.livePlayers.length > 0 ? this.livePlayers.at(0) : undefined
+    const winner = this.livePlayers.length === 1 ? this.livePlayers[0] : undefined
     this.commander.sendGameEnded(winner)
 
     this.onGameEnd()
+  }
+
+  private getTimeLeftSec() {
+    return Math.max(0, this.config.timeoutSec - Math.floor((Date.now() - this.startTimeMs) / 1000))
   }
 
   private isOnBoard([x, y]: Vector) {

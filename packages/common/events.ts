@@ -18,7 +18,7 @@ export interface ServerEmittedEventsMap {
     playerCount: number
     config: GameConfig
   }) => void
-  [SocketEvent.UpdateBoard]: (players: Player[], bullets: Bullet[], reason: string) => void
+  [SocketEvent.UpdateBoard]: (players: Player[], bullets: Bullet[], timeLeftSec: number, reason: string) => void
   [SocketEvent.ConnectionEstablished]: (persistentSocketId: string) => void
   [SocketEvent.GameEnded]: (winner?: Player) => void
 }

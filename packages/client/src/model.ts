@@ -4,7 +4,7 @@ import { ClientEmittedEventsMap, ServerEmittedEventsMap } from "../../common/eve
 
 export interface Painter {
   initialize(width: number, height: number): void;
-  drawBoard(players: Player[], bullets: Bullet[], focusedPlayerId: PlayerId): void;
+  drawBoard(players: Player[], bullets: Bullet[], focusedPlayerId: PlayerId, timeLeftSec: number): void;
   prepareForNewPaint(): void;
   clearBoard(): void;
 }

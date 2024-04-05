@@ -3,6 +3,7 @@ export interface GameConfig {
   columns: number
   playersNumber: number
   initialLifePoints: number
+  timeoutSec: number
 }
 
 export type PlayerId = string

@@ -28,7 +28,7 @@ export class ConsolePainter implements Painter {
     this.playerChar = '$'
     this.emptyFieldChar = ' '
     this.verticalEdgeChar = '|'
-    this.lifePointChar = '♥️'
+    this.lifePointChar = 'o'
     this.playerColors = [chalk.red, chalk.blue, chalk.green]
   }
 
@@ -63,7 +63,7 @@ export class ConsolePainter implements Painter {
     this.printLine('Press P to play again or any other key to disconnect')
   }
 
-  public drawBoard(players: Player[], bullets: Bullet[], focusedPlayerId: PlayerId) {
+  public drawBoard(players: Player[], bullets: Bullet[], focusedPlayerId: PlayerId, timeLeftSec: number) {
     const focusedPlayer = players.find(({ id }) => id === focusedPlayerId)
 
     const objects = [
@@ -93,7 +93,9 @@ export class ConsolePainter implements Painter {
 
     this.printLine(this.horizontalEdge)
     this.printLine()
-    this.printLine('Life: ' + (focusedPlayer ? `${this.lifePointChar} `.repeat(focusedPlayer.lifePoints).trim() : ''))
+    const livesLeft = 'Life: ' + (focusedPlayer ? `${this.lifePointChar} `.repeat(focusedPlayer.lifePoints).trim() : '')
+    const timeLeft = `${Math.floor(timeLeftSec / 60).toString().padStart(2, '0')}:${(timeLeftSec % 60).toString().padStart(2, '0')}`
+    this.printLine(livesLeft + ' '.repeat(this.drawAreaWidth - livesLeft.length - timeLeft.length) + timeLeft)
   }
 
   private printLine(line = '') {

@@ -110,8 +110,8 @@ export class SocketCommander implements Commander {
     sockets.get(player.id)?.emit(SocketEvent.PlayerJoined, { player, config, playerCount })
   }
 
-  sendUpdateBoard(players: Player[], bullets: Bullet[], reason: string) {
-    this.io.emit(SocketEvent.UpdateBoard, players, bullets, reason)
+  sendUpdateBoard(players: Player[], bullets: Bullet[], timeLeftSec: number, reason: string) {
+    this.io.emit(SocketEvent.UpdateBoard, players, bullets, timeLeftSec, reason)
   }
 
   private notImplemented(detail: string) {

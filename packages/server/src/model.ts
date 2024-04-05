@@ -9,7 +9,7 @@ export interface Commander {
   sendGameStarted(): void;
   sendGameEnded(winner?: Player): void;
   sendPlayerJoined(player: Player, playerCount: number, config: GameConfig): void;
-  sendUpdateBoard(players: Player[], bullets: Bullet[], reason: string): void;
+  sendUpdateBoard(players: Player[], bullets: Bullet[], timeLeftSec: number, reason: string): void;
 }
 
 export type SocketServer = io.Server<ClientEmittedEventsMap, ServerEmittedEventsMap>
