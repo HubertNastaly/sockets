@@ -23,3 +23,8 @@ export interface Bullet {
   position: Vector
   direction: Direction
 }
+
+export interface Logger {
+  log: (...values: any[]) => void
+  error: (...values: any[]) => void
+}

@@ -1,7 +1,7 @@
 import io from 'socket.io';
 import { Commander, Logger, SocketServer, Socket } from './model'
 import { Server as HttpServer} from 'http'
-import { Bullet, GameConfig, Player, PlayerDirection, PlayerId } from '../../common/model';
+import { Bullet, GameConfig, Logger, Player, PlayerDirection, PlayerId } from '../../common/model';
 import { ClientEmittedEventsMap, ServerEmittedEventsMap, SocketEvent } from '../../common/events';
 
 export class SocketCommander implements Commander {

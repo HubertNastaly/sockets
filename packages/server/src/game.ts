@@ -1,5 +1,5 @@
-import { Bullet, Direction, GameConfig, Player, PlayerDirection, PlayerId, Vector } from "../../common/model"
-import { Commander, Logger } from "./model"
+import { Bullet, Direction, GameConfig, Logger, Player, PlayerDirection, PlayerId, Vector } from "../../common/model"
+import { Commander } from "./model"
 
 enum GameState {
   Waiting,
@@ -107,7 +107,7 @@ export class Game {
 
     this.gameLoop = setInterval(() => {
       this.updateBoard()
-      this.sendUpdateBoard()
+      this.sendUpdateBoard(true)
     }, FRAME_INTERVAL)
   }
 
@@ -118,7 +118,6 @@ export class Game {
     }, updatedBullets)
 
     this.bullets = remainingBullets
-    this.sendUpdateBoard()
   }
 
   private moveBullets() {
@@ -159,7 +158,7 @@ export class Game {
 
     if(canMoveOnDesiredPosition) {
       player.position = [x, y]
-      this.sendUpdateBoard()
+      this.sendUpdateBoard(false)
     }
   }
 
@@ -227,12 +226,12 @@ export class Game {
       direction
     }
     this.bullets.push(bullet)
-    this.sendUpdateBoard()
+    this.sendUpdateBoard(false)
   }
 
-  private sendUpdateBoard() {
+  private sendUpdateBoard(scheduled: boolean) {
     if(this.gameState === GameState.Started) {
-      this.commander.sendUpdateBoard(this.livePlayers, this.bullets)
+      this.commander.sendUpdateBoard(this.livePlayers, this.bullets, scheduled)
     }
   }
 

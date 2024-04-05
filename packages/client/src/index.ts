@@ -1,31 +1,64 @@
 import readline from 'readline'
+import path from 'path'
 import { connect } from 'socket.io-client'
 import { Bullet, Player, PlayerDirection, PlayerId } from '../../common/model'
 import { ClientSocket } from './model'
 import { ConsolePainter } from './consolePainter'
 import { SocketEvent } from '../../common/events'
+import { FileLogger } from '../../common/fileLogger'
+import { Benchmark } from '../../common/benchmark'
 
 const SERVER_URL = 'http://localhost:3000'
 
+const getFileName = (id: string) => path.join('logs', `${id}.txt`)
+
 class Client {
   private socket: ClientSocket
-  public readonly name: string
+  private logger: FileLogger
+  private benchmark: Benchmark
+  public name: string
   private painter: ConsolePainter
   private playerId: PlayerId
   private gameEnded: boolean
 
   constructor() {
-    this.name = 'Adam'
+    this.name = ''
     this.painter = new ConsolePainter()
+    this.logger = {} as FileLogger
     this.playerId = ''
     this.gameEnded = false
     this.socket = {} as ClientSocket
+    this.benchmark = new Benchmark(['fire', 'move'])
   }
 
   public run() {
-    this.socket = connect(SERVER_URL, {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    })
+
+    rl.question('Type name: ', (name) => {
+      this.name = name
+      this.logger = new FileLogger(getFileName(name))
+      this.setupSocket()
+    })
+  }
+
+  private setupSocket() {
+    const socket = connect(SERVER_URL, {
       transports: ['websocket', 'polling']
     })
+
+    socket.on('connect', () => {
+      console.log('Client socket connection established')
+      this.joinGame()
+    })
+  
+    socket.on('connect_error', (error) => {
+      console.log('connect_error', { error })
+    })
+
+    this.socket = socket
 
     this.registerConnectionEstablished()
     this.registerPlayerJoined()
@@ -33,15 +66,6 @@ class Client {
     this.registerUpdateBoard()
     this.registerGameEnded()
     this.registerKeyPress()
-
-    this.socket.on('connect', () => {
-      console.log('Client socket connection established')
-      this.joinGame()
-    })
-  
-    this.socket.on('connect_error', (error) => {
-      console.log({ error })
-    })
   }
 
   private joinGame() {
@@ -53,12 +77,14 @@ class Client {
   }
 
   private fire() {
+    this.logger.log('Fire')
+    this.benchmark.start('fire')
     this.socket.emit(SocketEvent.Fire)
   }
 
   private registerStart() {
     this.socket.on(SocketEvent.Start, () => {
-      console.log('Game started')
+      this.logger.log('Game started')
       this.painter.drawBoard([], [], this.playerId)
     })
   }
@@ -72,9 +98,18 @@ class Client {
   }
 
   private registerUpdateBoard() {
-    this.socket.on(SocketEvent.UpdateBoard, (players: Player[], bullets: Bullet[]) => {
+    this.socket.on(SocketEvent.UpdateBoard, (players: Player[], bullets: Bullet[], scheduled) => {
+      if(!scheduled) {
+        this.logger.log('Update board')
+        this.benchmark.stop('fire')
+      }
+
       this.painter.prepareForNewPaint()
       this.painter.drawBoard(players, bullets, this.playerId)
+
+      if(!scheduled) {
+        this.logger.log('Board repainted')
+      }
     })
   }
 
@@ -86,6 +121,7 @@ class Client {
 
   private registerGameEnded() {
     this.socket.on(SocketEvent.GameEnded, (winner?: Player) => {
+      this.logger.log(this.benchmark.getAverage('fire').toString())
       this.gameEnded = true
       this.painter.clearBoard()
       this.painter.drawGameEnded(winner)

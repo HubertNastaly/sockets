@@ -2,11 +2,6 @@ import io from "socket.io";
 import { Bullet, GameConfig, Player, PlayerDirection, PlayerId } from "../../common/model";
 import { ClientEmittedEventsMap, ServerEmittedEventsMap } from "../../common/events";
 
-export interface Logger {
-  log: (...values: any[]) => void
-  error: (...values: any[]) => void
-}
-
 export interface Commander {
   setOnJoinCallback(callback: (id: PlayerId, name: string) => void): void;
   setOnFireCallback(callback: (playerId: PlayerId) => void): void;
@@ -14,7 +9,7 @@ export interface Commander {
   sendGameStarted(): void;
   sendGameEnded(winner?: Player): void;
   sendPlayerJoined(player: Player, config: GameConfig): void;
-  sendUpdateBoard(players: Player[], bullets: Bullet[]): void;
+  sendUpdateBoard(players: Player[], bullets: Bullet[], scheduled: boolean): void;
 }
 
 export type SocketServer = io.Server<ClientEmittedEventsMap, ServerEmittedEventsMap>
