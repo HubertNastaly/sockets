@@ -28,7 +28,7 @@ class Client {
     this.playerId = ''
     this.gameEnded = false
     this.socket = {} as ClientSocket
-    this.benchmark = new Benchmark(['fire', 'move'])
+    this.benchmark = new Benchmark(['fire', 'move', 'repaint'])
   }
 
   public run() {
@@ -98,17 +98,20 @@ class Client {
   }
 
   private registerUpdateBoard() {
-    this.socket.on(SocketEvent.UpdateBoard, (players: Player[], bullets: Bullet[], reason) => {
+    this.socket.on(SocketEvent.UpdateBoard, (players, bullets, reason) => {
       if(reason === 'fire') {
-        this.logger.log('Update board')
         this.benchmark.stop('fire')
+        this.logger.log('Update board')
+        this.benchmark.start('repaint')
       }
 
       this.painter.prepareForNewPaint()
       this.painter.drawBoard(players, bullets, this.playerId)
 
       if(reason === 'fire') {
+        this.benchmark.stop('repaint')
         this.logger.log('Board repainted')
+        this.logger.log('Current average: ' + this.benchmark.getAverage('repaint'))
       }
     })
   }
@@ -120,7 +123,7 @@ class Client {
   }
 
   private registerGameEnded() {
-    this.socket.on(SocketEvent.GameEnded, (winner?: Player) => {
+    this.socket.on(SocketEvent.GameEnded, (winner) => {
       this.logger.log(this.benchmark.getAverage('fire').toString())
       this.gameEnded = true
       this.painter.clearBoard()
