@@ -1,4 +1,5 @@
 import { Bullet, Direction, GameConfig, Logger, Player, PlayerDirection, PlayerId, Vector } from "../../common/model"
+import { config } from "./gameConfig"
 import { Commander } from "./model"
 
 enum GameState {
@@ -31,13 +32,7 @@ export class Game {
   private onGameEnd: () => void
 
   constructor(logger: Logger, commander: Commander) {
-    this.config = {
-      columns: 30,
-      rows: 30,
-      playersNumber: 2,
-      initialLifePoints: 3,
-      timeoutSec: 90
-    }
+    this.config = config
     this.playersMap = {}
     this.livePlayers = []
     this.bullets = []
